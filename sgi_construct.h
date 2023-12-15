@@ -26,7 +26,7 @@ namespace ZMJ
     template <class ForwardIterator>
     inline void destory(ForwardIterator first, ForwardIterator last)
     {
-        __destory(first, last, value_type(first));
+        __destory(first, last,&*first);
     }
 
     template <class ForwardIterator, class T>

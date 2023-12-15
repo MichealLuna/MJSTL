@@ -38,13 +38,13 @@ namespace ZMJ
     public:
         static void *allocate(size_t n)
         {
-            void *resutl = malloc(n);
+            void *result = malloc(n);
             if (result == 0)
                 result = oom_malloc(n);
             return result;
         }
 
-        static void *deallocate(void *p, size_t)
+        static void deallocate(void *p, size_t)
         {
             free(p);
         }
@@ -169,7 +169,7 @@ namespace ZMJ
     size_t default_alloc_template<threads, inst>::heap_size = 0;
 
     template <bool threads, int inst>
-    default_alloc_template<threads, inst>::obj *volatile default_alloc_template<threads, inst>::free_list[nfreelists] = {
+    typename default_alloc_template<threads, inst>::obj *volatile default_alloc_template<threads, inst>::free_list[nfreelists] = {
         0,
         0,
         0,
@@ -194,7 +194,7 @@ namespace ZMJ
         obj *volatile *free_list_node;
         obj *result;
 
-        if (bytes > (size_t)max_bytes)
+        if (bytes > (size_t)max_size)
         {
             return malloc_alloc::allocate(bytes);
         }
@@ -202,7 +202,7 @@ namespace ZMJ
         free_list_node = free_list + free_list_index(bytes);
         result = *free_list_node;
 
-        if (result)
+        if (result == 0)
         {
             void *ret = refill(round_up(bytes));
             return ret;
@@ -219,7 +219,7 @@ namespace ZMJ
         obj *volatile *free_list_node;
 
         /*如果大于max_bytes,128字节使用1级分配器*/
-        if (n > (size_t)max_bytes)
+        if (n > (size_t)max_size)
         {
             malloc_alloc::deallocate(p, n);
             return;
@@ -236,7 +236,7 @@ namespace ZMJ
         obj *q = (obj *)p;
         void *result;
 
-        if (new_sz > (size_t)max_bytes)
+        if (new_sz > (size_t)max_size)
         {
             return malloc_alloc::reallocate(p, old_sz, new_sz);
         }
@@ -275,7 +275,7 @@ namespace ZMJ
             next_obj = (obj *)((char *)next_obj + n);
             if (nodjs - 1 == i)
             {
-                curr_obj->next_obj = 0;
+                curr_obj->free_list_next = 0;
                 break;
             }
             else
@@ -329,13 +329,12 @@ namespace ZMJ
             if (bytes_left > 0)
             {
                 /*把内存池的剩余空间分配给free_list*/
-                obj *node = free_list + free_list_index(bytes_left);
-                *((obj *)(start_free))->free_list_next = *node->free_list_next;
-                *node = start_free;
-                start_free += bytes_left;
+                obj * volatile *node = free_list + free_list_index(bytes_left);
+                ((obj *)(start_free))->free_list_next = *node;
+                *node = (obj*)start_free;
             }
 
-            start_free = (obj *)malloc(bytes_to_get);
+            start_free = (char *)malloc(bytes_to_get);
             if (start_free == NULL)
             {
                 obj *volatile *free_list_node, *p;
@@ -346,7 +345,7 @@ namespace ZMJ
                     if (p != NULL)
                     {
                         *free_list_node = p->free_list_next;
-                        start_free = (obj *)p;
+                        start_free = (char *)p;
                         end_free = start_free + i;
                         return chunk_alloc(size, nobjs);
                     }
@@ -366,7 +365,7 @@ namespace ZMJ
     typedef default_alloc_template<false, 0> alloc;
 #endif
 
-    template <class T, class Alloc = alloc>
+    template <class T>
     class simple_alloc
     {
     public:
@@ -379,40 +378,45 @@ namespace ZMJ
         using difference_type = ptrdiff_t;
 
     public:
+        template<class U>
+        simple_alloc(const simple_alloc<U>&) noexcept{}
+        
+        simple_alloc(){}
+    public:
         template <class U>
         struct rebind
         {
-            using other = simple_alloc<T, U>;
+            using other = simple_alloc<U>;
         };
 
     public:
-        static pointer allocate(size_t n)
+        pointer allocate(size_t n)
         {
-            return 0 == n ? 0 : (T *)Alloc::allocate(n * sizeof(T));
+            return 0 == n ? 0 : (T *)alloc::allocate(n * sizeof(T));
         }
 
-        static pointer allocate()
+        pointer allocate()
         {
-            return (T *)Alloc::allocate(sizeof(T));
+            return (T *)alloc::allocate(sizeof(T));
         }
 
-        static void deallocate(T *p, size_t n)
+        void deallocate(T *p, size_t n)
         {
             if (n != 0)
-                Alloc::deallocate(p, n * sizeof(T));
+                alloc::deallocate(p, n * sizeof(T));
         }
 
-        static void deallocate(T *p)
+        void deallocate(T *p)
         {
-            Alloc::deallocate(p, sizeof(T));
+            alloc::deallocate(p, sizeof(T));
         }
 
-        static void construct(T *p, const T &val)
+        void construct(T *p, const T &val)
         {
             ZMJ::construct(p, val);
         }
 
-        static void destroy(T *p)
+        void destroy(T *p)
         {
             ZMJ::destory(p);
         }
