@@ -382,6 +382,12 @@ namespace ZMJ
         simple_alloc(const simple_alloc<U>&) noexcept{}
         
         simple_alloc(){}
+
+        malloc_handler set_oom_handler(malloc_handler hdl){
+            malloc_handler old = malloc_alloc_template<0>::malloc_alloc_oom_handler;
+            malloc_alloc_template<0>::malloc_alloc_oom_handler = hdl;
+            return old;
+        }
     public:
         template <class U>
         struct rebind
