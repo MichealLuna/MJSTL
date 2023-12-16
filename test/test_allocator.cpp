@@ -2,11 +2,27 @@
 #include "../sgi_allocator.h"
 
 #include <string>
+#include <list>
+#include <queue>
 #include <vector>
 #include <map>
 #include <unordered_map>
 #include <algorithm>
+#include <thread>
 using namespace std;
+
+enum{
+    GKB = 1024,
+    MKB = 1024*1024,
+    GiB = 1024*1024*1024
+};
+struct BigBlock{
+    int data[1024*1024*1024];
+    void set(int val){
+        for(int i=0;i<sizeof(data)/sizeof(int);i++)
+            data[i] = val;
+    }
+};
 
 int main(){
     //for vector
@@ -35,5 +51,23 @@ int main(){
     }
     for_each(umap.begin(),umap.end(),[](std::pair<std::string,int> i){ cout<<i.first<<" "<<i.second<<"\n"; });
 
+    //for list
+    std::list<std::string,ZMJ::simple_alloc<std::string>> lt;
+    for(int i = 0; i < 1000; ++i){
+        lt.push_back("YOLA");
+    }
+    for_each(lt.begin(),lt.end(),[](std::string& i){ cout<<i<<"\n"; });
+
+    //for dequeue
+    std::deque<std::string,ZMJ::simple_alloc<std::string>> dt;
+    for(int i = 0; i < 1000; ++i){
+        dt.push_back("RaidenEi");
+    }
+    for_each(dt.begin(),dt.end(),[](std::string& i){ cout<<i<<"\n"; });
+
+    //for big memory allocate.
+    BigBlock* big = ZMJ::simple_alloc<BigBlock>().allocate(2);
+    big->set(628);
+    ZMJ::simple_alloc<BigBlock>().deallocate(big,2);
     return 0;
 }
