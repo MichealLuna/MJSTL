@@ -365,7 +365,7 @@ namespace ZMJ
     typedef default_alloc_template<false, 0> alloc;
 #endif
 
-    template <class T>
+    template <class T,class Alloc = alloc>
     class simple_alloc
     {
     public:
