@@ -80,8 +80,62 @@ namespace ZMJ
     */
     
 
+    template<typename InputIterator>
+    inline typename iterator_traits<InputIterator>::difference_type
+    distance(InputIterator first, InputIterator last){
+        typedef typename iterator_traits<InputIterator>::iterator_category category;
+        return __distance(first,last,category());
+    }
+
+    template<typename InputIterator>
+    inline typename iterator_traits<InputIterator>::difference_type
+    __distance(InputIterator first, InputIterator last, input_iterator_tag){
+        iterator_traits<InputIterator>::difference_type n = 0;
+        while(first != last){
+            ++first;
+            ++n;
+        }
+        return n;
+    }
+
+    template<typename RandomAccessIterator>
+    inline typename iterator_traits<RandomAccessIterator>::difference_type
+    __distance(RandomAccessIterator first,RandomAccessIterator last,random_access_iterator_tag){
+        return last - first;
+    }
+
+    template<typename InputIterator,class Distance>
+    inline void advance(InputIterator& i,Distance n){
+        __advance(i,n,iterator_category(i));
+    }
+
+    template<typename InputIterator,class Distance>
+    inline void __advance(InputIterator& i,Distance n,input_iterator_tag){
+        while(n > 0){
+            ++i;
+            --n;
+        }
+    }
+    
+    template<typename InputIterator,class Distance>
+    inline void __advance(InputIterator& i,Distance n,bidirectional_iterator_tag){
+        if(n >= 0){
+            while(n > 0){
+                --n;
+                ++i;
+            }
+        }else{
+            while(n < 0){
+                ++n;
+                ++i;
+            }
+        }
+    }
+
+    template<typename RandonAccessIterator,class Distance>
+    inline void __advance(RandonAccessIterator& i,Distance n,random_access_iterator_tag){
+        i += n;
+    }
+
 } // namespace ZMJ
-
-
-
 #endif//iterator.h
