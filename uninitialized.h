@@ -4,7 +4,7 @@
 #include "iterator.h"
 #include "type_traits.h"
 #include "sgi_construct.h"
-#include <wchar.h>
+#include "aglobase.h"
 
 namespace ZMJ{
 
@@ -42,12 +42,11 @@ __uninitialized_copy(InputIterator first, InputIterator last,
     return __uninitialized_copy_aux(first, last, result, is_POD());
 }
 
-/*对于is_POD型，却什么也不做，连初始化都没做，应该会在其它地方做。*/
 template<class InputIterator, class ForwardIterator>
 inline ForwardIterator
 __uninitialized_copy_aux(InputIterator first, InputIterator last, 
         ForwardIterator result, __true_type){
-    return result;
+    return copy(first,last,result);
 }
 
 /*这里做placement new其实也相当于了copy，因为会使用result开始的值来初始化[first，last)*/
@@ -90,6 +89,7 @@ __uninitialized_copy(ForwardIterator first, ForwardIterator last, const T& x, T*
 template<class ForwardIterator, class T>
 inline void
 __uninitialized_copy_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type){
+    fill(first,last,x);
 }
 
 template<class ForwardIterator, class T>
@@ -116,7 +116,7 @@ __uninitialized_fill_n(ForwardIterator first, Size n, const T& x, T*){
 template<class ForwardIterator, class Size, class T>
 inline ForwardIterator
 __uninitialized_fill_n_aux(ForwardIterator first,Size n,const T& x,__true_type){
-    return first;
+    return fill_n(first,n,x);
 }
 
 template<class ForwardIterator,class Size, class T>
