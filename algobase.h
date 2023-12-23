@@ -335,4 +335,4 @@ inline bool lexicographical_compare(const unsigned char* first1,const unsigned c
 
 }//namespace ZMJ
 
-#endif//aglobase.h
+#endif//algobase.h
