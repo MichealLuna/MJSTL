@@ -2,7 +2,7 @@
 #define __SET_ALGO_H__
 
 #include "iterator.h"
-#include "aglobase.h"
+#include "algobase.h"
 #include <algorithm>
 namespace ZMJ{
 
