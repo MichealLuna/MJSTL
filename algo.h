@@ -1,4 +1,4 @@
-#include __ALGO_H__
+#ifndef __ALGO_H__
 #define __ALGO_H__
 
 #include "iterator.h"
@@ -248,8 +248,8 @@ bool includes(InputIterator1 first1,InputIterator1 last1,InputIterator2 first2,I
 }
 
 template<class InputIterator1,class InputIterator2,class Compare>
-bool includes(InputIterator1 first1,InputIterator last1,
-    InputIterator first2,InputIterator last2,Compare comp){
+bool includes(InputIterator1 first1,InputIterator1 last1,
+    InputIterator2 first2,InputIterator2 last2,Compare comp){
     while(first1 != last1 && first2 != last2){
         if(comp(*first2,*first1))
             return false;
@@ -338,7 +338,7 @@ OutputIterator merge(InputIterator1 first1,InputIterator1 last1,
 *  对区间元素重排，被一元条件判断为true的元素放到前半段，不保证元素的原始相对位置。
 *****************************************************************************************************************/
 template<class BidirectionalIterator,class Predicate>
-BidirectionalIterator partition(BidirectionalItertor first,BidirectionalIterator last,Predicate pred){
+BidirectionalIterator partition(BidirectionalIterator first,BidirectionalIterator last,Predicate pred){
     while(true){
         while(true){
             if(first == last) return first;
@@ -608,8 +608,8 @@ ForwardIterator1 __search(ForwardIterator1 first1,ForwardIterator1 last1,
 }
 
 template<class ForwardIterator1,class ForwardIterator2>
-inline ForwardIterator1 search(ForwardIterator1 first1,ForwardIterator last2,
-    ForwardIterator2 first2,ForwardIterator last2){
+inline ForwardIterator1 search(ForwardIterator1 first1,ForwardIterator1 last1,
+    ForwardIterator2 first2,ForwardIterator2 last2){
     return __search(first1,last1,first2,last2,distance_type(first1),distance_type(first2));
 }
 
@@ -641,8 +641,8 @@ ForwardIterator1 __search(ForwardIterator1 first1,ForwardIterator1 last1,
 }
 
 template<class ForwardIterator1,class ForwardIterator2,class Compare>
-inline ForwardIterator1 search(ForwardIterator1 first1,ForwardIterator last2,
-    ForwardIterator2 first2,ForwardIterator last2,Compare comp){
+inline ForwardIterator1 search(ForwardIterator1 first1,ForwardIterator1 last1,
+    ForwardIterator2 first2,ForwardIterator2 last2,Compare comp){
     return __search(first1,last1,first2,last2,comp,distance_type(first1),distance_type(first2));
 }
 
