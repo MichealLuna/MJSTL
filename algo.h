@@ -3,6 +3,7 @@
 
 #include "iterator.h"
 #include "algobase.h"
+#include "heap_algo.h"
 #include "reverse_iterator.h"
 
 
@@ -33,6 +34,233 @@ ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last, Compa
         first = next;
     }
     return last;
+}
+
+/*********************************************upper_bound**********************************************
+*   二分查找，如果在[first,last)最后一个同于value的元素，并返回该位置。
+*******************************************************************************************************/
+/*__upper_bound forward_iterator版本*/
+template<class ForwardIterator,class T,class Distance>
+ForwardIterator 
+__upper_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Distance*,forward_iterator_tag){
+    Distance len = distance(first,last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle,half);
+        if(value < *middle){
+            len = half;
+        }else{
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class RandomAccessIterator,class T,class Distance>
+RandomAccessIterator 
+__upper_bound(RandomAccessIterator first,RandomAccessIterator last,
+    const T& value,Distance*,random_access_iterator_tag){
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(value < *middle){
+            len = half;
+        }else{
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class ForwardIterator,class T>
+ForwardIterator
+upper_bound(ForwardIterator first,ForwardIterator last,const T& value){
+    return __upper_bound(first,last,value,
+        distance_type(first),iterator_category(first));
+}
+
+/*upper_bound仿函数版本。*/
+template<class ForwardIterator,class T,class Distance,class Compare>
+ForwardIterator 
+__upper_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp,Distance*,forward_iterator_tag){
+    Distance len = distance(first,last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle,half);
+        if(comp(value,*middle)){
+            len = half;
+        }else{
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class RandomAccessIterator,class T,class Distance,class Compare>
+RandomAccessIterator 
+__upper_bound(RandomAccessIterator first,RandomAccessIterator last,
+    const T& value,Compare comp,Distance*,random_access_iterator_tag){
+    Distance len = last - first;
+    Distance half;
+    RandomAccessIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(comp(value,*middle)){
+            len = half;
+        }else{
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+    }
+    return first;
+}
+
+template<class ForwardIterator,class T,class Compare>
+ForwardIterator
+upper_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp){
+    return __upper_bound(first,last,value,comp,
+        distance_type(first),iterator_category(first));
+}
+
+/*********************************************lower_bound**********************************************
+*   二分查找，如果在[first,last)第一个同于value的元素，并返回该位置。
+*******************************************************************************************************/
+
+/*__lower_bound，forward_iterator版本*/
+template<class ForwardIterator,class T,class Distance>
+ForwardIterator
+__lower_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Distance*,forward_iterator_tag){
+    Distance len = distance(first,last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle,half);
+        if(*middle < value){
+            first = middle;
+            ++first;
+            len = len - half - 1;/*middle也可以排除，多减1。*/
+        }else
+            len = half;
+    }
+    return first;
+}
+
+/*__lower_bound, random_access_iterator版本*/
+template<class ForwardIterator,class T,class Distance>
+ForwardIterator
+__lower_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Distance*,random_access_iterator_tag){
+    Distance len = last - len;
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(*middle < value){
+            first = middle + 1;
+            len = len - half - 1;
+        }else
+            len = half;
+    }
+    return first;/*len 长度为0，说明二分的上下边界被缩小到0，first就被确定了*/
+}
+
+template<class ForwardIterator,class T>
+inline ForwardIterator 
+lower_bound(ForwardIterator first,ForwardIterator last,const T& value){
+    return __lower_bound(first,last,value,
+    distance_type(first),iterator_category(first));
+}
+
+/*重载lower_bound,使用comp仿函数进行比较*/
+/*__lower_bound的仿函数，forward_iterator版本*/
+template<class ForwardIterator,class T,class Distance,class Compare>
+ForwardIterator
+__lower_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp,Distance*,forward_iterator_tag){
+    Distance len = distance(first,last);
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first;
+        advance(middle,half);
+        if(comp(*middle,value)){
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }else
+            len = half;
+    }
+    return first;
+}
+
+/*__lower_bound, random_access_iterator版本*/
+template<class ForwardIterator,class T,class Distance,class Compare>
+ForwardIterator
+__lower_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp,Distance*,random_access_iterator_tag){
+    Distance len = last - len;
+    Distance half;
+    ForwardIterator middle;
+    while(len > 0){
+        half = len >> 1;
+        middle = first + half;
+        if(comp(*middle,value)){
+            first = middle + 1;
+            len = len - half - 1;
+        }else
+            len = half;
+    }
+    return first;
+}
+
+template<class ForwardIterator,class T,class Compare>
+inline ForwardIterator 
+lower_bound(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp){
+    return __lower_bound(first,last,value,comp,
+    distance_type(first),iterator_category(first));
+}
+
+
+/*********************************************binary_search********************************************
+*   二分查找，如果在[first,last)有等同于value的元素，返回true,否则返回false。
+*******************************************************************************************************/
+template<class ForwardIterator,class T>
+bool binary_search(ForwardIterator first,ForwardIterator last,const T& value){
+    ForwardIterator it = lower_bound(first,last,value);
+    return it != last && !(value < *it);
+}
+
+template<class ForwardIterator,class T,class Compare>
+bool binary_search(ForwardIterator first,ForwardIterator last,
+    const T& value,Compare comp){
+    ForwardIterator it = lower_bound(first,last,value);
+    return it != last && !comp(value,*it);
 }
 
 /***********************************************count************************************************
@@ -334,6 +562,181 @@ OutputIterator merge(InputIterator1 first1,InputIterator1 last1,
     return copy(first1,last1,copy(first2,last2,result));
 }
 
+
+/*********************************************next_permutation***************************************************
+*  使得[first,last)序列的变成下一个排列组合，如果没有下一个排序组合，返回false，有则返回true。
+*  列如：序列[first,last)为数组： 5 1 2 9 , 它的下一序列为： 5 1 9 2，它的最大序列：9 5 2 1。
+*****************************************************************************************************************/
+template<class BidirectionalIterator>
+bool next_permutation(BidirectionalIterator first,BidirectionalIterator last){
+    BidirectionalIterator it = last;
+    if(first == last || first == --it) return false;
+    for(;;){ 
+        /* 
+        *    if条件：旨在找到一个元素位置，这个位置元素小于后面位置的元素。
+        *  这个位置特殊，因为这个位置元素小于，只要把它后面比它大的元素交换，
+        *  整个序列一定是变大的。
+        *    iit从last-1往前，如果多次成立，那么[iit,last)将是递减序列。 
+        */
+        auto iit = it;
+        if(*--it < *iit){
+            auto jit = last;
+            /*
+            *    需要在[iit,last)找到第一个比it大的元素，因为要使得序列变大，it位置新的元素
+            * 当然要大于原来it位置的元素。it位置元素变大后，整个序列自然变大了，然而可能大
+            * 过头，因为[iit,last)现在是最大序列，it位置变大之后，应该把[iit,last)
+            * 变成最小序列，这只需要把[iit,last)进行翻转即可！
+            */
+            while(!(*it < *--jit)){}
+            iter_swap(it,jit);
+            reverse(iit,last);
+            return true;
+        }
+
+        /*
+        *      迭代器it一直从last-1往前直到first，说明[first,last)是一个递减序列，
+        *  也就是说序列最大元素在前面，依次往后都是小于等于前一个元素，这是一个最大
+        *  序列，返回false。(这里实现时，最大序列会变成最小序列)
+        */
+        if(it == first){
+            reverse(first,last);
+            return false;
+        }
+    }
+}
+
+template<class BidirectionalIterator,class Compare>
+bool next_permutation(BidirectionalIterator first,BidirectionalIterator last,Compare comp){
+    BidirectionalIterator it = last;
+    if(first == last || first == --it) return false;
+    for(;;){ 
+        auto iit = it;
+        --it;
+        if(comp(*it,*iit)){
+            auto jit = last;
+            while(!comp(*it,*jit)){}
+            iter_swap(it,jit);
+            reverse(iit,last);
+            return true;
+        }
+
+        if(it == first){
+            reverse(first,last);
+            return false;
+        }
+    }
+}
+
+/************************************************partial_sort****************************************************
+*  对整个序列做部分排序，保证较小的N个元素以递增顺序位于[first,first + N);
+*****************************************************************************************************************/
+template<class RandomAccessIterator,class T>
+void __partial_sort(RandomAccessIterator first,RandomAccessIterator middle,RandomAccessIterator last){
+    make_heap(first,middle);
+    /*
+    *   建好前半段的堆，然后依次判断后半段是否小于堆顶元素，
+    * 如果小于堆顶元素，说明这个first位置元素应该放到后半段，
+    * 而小于堆顶元素被放入前半段的堆中。
+    */
+    for(RandomAccessIterator it = middle; it < last; ++it){
+        if(*it < *first)
+            pop_heap_aux(first,middle,it,T(*it),distance_type(first));
+    }
+    /*最后，[first,middle)只满足堆序性，需要重新排序。*/
+    sort_heap(first,middle);
+}
+
+template<class RandomAccessIterator>
+void partial_sort(RandomAccessIterator first,RandomAccessIterator middle,RandomAccessIterator last){
+    __partial_sort(first,middle,last);
+}
+
+/*使用仿函数comp版本*/
+template<class RandomAccessIterator,class T,class Compare>
+void __partial_sort(RandomAccessIterator first,RandomAccessIterator middle,
+    RandomAccessIterator last,Compare comp,T*){
+    make_heap(first,middle,comp);
+    for(RandomAccessIterator it = middle; it < last; ++it){
+        if(*it < *first)
+            pop_heap_aux(first,middle,it,T(*it),distance_type(first),comp);
+    }
+    sort_heap(first,middle,comp);
+}
+
+template<class RandomAccessIterator,class Compare>
+void partial_sort(RandomAccessIterator first,RandomAccessIterator middle,
+    RandomAccessIterator last,Compare comp){
+    __partial_sort(first,middle,last,comp,value_type(first));
+}
+
+/*******************************************partial_sort_copy************************************************
+*  与partial_sort相同，但将排序结果放入result。
+*************************************************************************************************************/
+template<class InputIterator,class RandomAccessIterator,class Distance,class T>
+RandomAccessIterator
+__partial_sort_copy(InputIterator first,InputIterator last,
+    RandomAccessIterator result_first,RandomAccessIterator result_last,Distance*,T*){
+    /*result容器可能小于输入容器。*/
+    if(result_first == result_last) return result_last;
+    RandomAccessIterator result_iter = result_first;
+    while(first != last && result_iter != result_last){
+        *result_iter = *first;
+        ++first;
+        ++result_iter;
+    }
+
+    make_heap(result_first,result_iter);
+    for(;first != last; ++first){
+        if(*first < *result_first)
+            adjust_heap(result_first,static_cast<Distance(0),
+                static_cast<Distance>(result_last - result_first),(T)(*first));
+    }
+    sort_heap(result_first,result_iter);
+    return result_iter;
+}
+
+template<class InputIterator,class RandomAccessIterator>
+RandomAccessIterator 
+partial_sort_copy(InputIterator first,InputIterator last,
+    RandomAccessIterator result_first,RandomAccessIterator result_last){
+    return __partial_sort_copy(first,last,result_first,result_last,
+        distance(result_first),value_type(first));
+}
+
+/*partial_sort_copy使用仿函数comp重载版本*/
+template<class InputIterator,class RandomAccessIterator,
+    class Compare,class Distance,class T>
+RandomAccessIterator
+__partial_sort_copy(InputIterator first,InputIterator last,
+    RandomAccessIterator result_first,RandomAccessIterator result_last,
+    Compare comp,Distance*,T*){
+    /*result容器可能小于输入容器。*/
+    if(result_first == result_last) return result_last;
+    RandomAccessIterator result_iter = result_first;
+    while(first != last && result_iter != result_last){
+        *result_iter = *first;
+        ++first;
+        ++result_iter;
+    }
+
+    make_heap(result_first,result_iter,comp);
+    for(;first != last; ++first){
+        if(comp(*first,*result_first))
+            adjust_heap(result_first,static_cast<Distance(0),
+                static_cast<Distance>(result_last - result_first),(T)(*first),comp);
+    }
+    sort_heap(result_first,result_iter,comp);
+    return result_iter;
+}
+
+template<class InputIterator,class RandomAccessIterator,class Compare>
+RandomAccessIterator 
+partial_sort_copy(InputIterator first,InputIterator last,
+    RandomAccessIterator result_first,RandomAccessIterator result_last,Compare comp){
+    return __partial_sort_copy(first,last,result_first,result_last,comp,
+        distance(result_first),value_type(first));
+}
+
 /**************************************************partition******************************************************
 *  对区间元素重排，被一元条件判断为true的元素放到前半段，不保证元素的原始相对位置。
 *****************************************************************************************************************/
@@ -355,6 +758,60 @@ BidirectionalIterator partition(BidirectionalIterator first,BidirectionalIterato
         iter_swap(first,last);//交换迭代器所指位置的对象
         ++first;
     }
+}
+
+/**********************************************prev_permutation****************************************************
+*  将[first,last)的序列变成上一序列，如果有上一序列则返回true，否则返回false。
+* 列如： 9 2 3 1 上一序列为 ： 9 2 1 3 返回true; 最开始序列为 1 2 3 9。
+*******************************************************************************************************************/
+template<class BidirectionalIterator>
+bool prev_permutation(BidirectionalIterator first,BidirectionalIterator last){
+    BidirectionalIterator it = last;
+    if(first == last || first == --it) return false;
+    for(;;){
+        BidirectionalIterator iit = it;
+        --it;
+        if(*iit < *it){/*如果前一个元素大于后一个元素*/
+            BidirectionalIterator jit = last;
+            /* 
+            *  note: (*--jit < *it)，即从last往前找到第一个不大于it的元素。
+            * 那么while循环条件自然就是：！(*--jit < *it),就一直循环。
+            */
+            while(!(*--jit < *it)){}
+            iter_swap(it,jit);
+            reverse(iit,last);
+            return true;
+        }
+
+        if(first == it){
+            reverse(first,last);
+            break;
+        }
+    }
+    return false;
+}
+
+template<class BidirectionalIterator,class Compare>
+bool prev_permutation(BidirectionalIterator first,BidirectionalIterator last,Compare comp){
+    BidirectionalIterator it = last;
+    if(first == last || first == --it) return false;
+    for(;;){
+        BidirectionalIterator iit = it;
+        --it;
+        if(comp(*iit,*it)){
+            BidirectionalIterator jit = last;
+            while(!comp(*--jit,*it)){}
+            iter_swap(it,jit);
+            reverse(iit,last);
+            return true;
+        }
+
+        if(first == it){
+            reverse(first,last);
+            break;
+        }
+    }
+    return false;
 }
 
 /**************************************************remove_copy******************************************************
