@@ -32,6 +32,28 @@ OutputIterator set_union(InputIterator1 first1,InputIterator1 last1,
     return copy(first1,last1,copy(first2,last2,result));
 }
 
+template<class InputIterator1,class InputIterator2,class OutputIterator,class Compare>
+OutputIterator set_union(InputIterator1 first1,InputIterator1 last1,
+    InputIterator2 first2,InputIterator2 last2,OutputIterator result,Compare comp){
+    /*小的放入result，巧妙，如果碰到相等的只放入其中1个。*/
+    while(first1 != last1 && first2 != last2){
+        if(comp(*first1,*first2)){
+            *result = *first1;
+            ++first1;
+        }else if(comp(*first2,*first1)){
+            *result = *first2;
+            ++first2;
+        }else{
+            *result = *first1;
+            ++first1;
+            ++first2;
+        }
+        ++result;
+    }
+    /*剩下的一定是可以全部拷贝到result的。这里必有其中copy是没有做任何操作的。*/
+    return copy(first1,last1,copy(first2,last2,result));
+}
+
 /*********************************************set_intersection**********************************************/
 template<class InputIterator1,class InputIterator2,class OutputIterator>
 inline OutputIterator
