@@ -7,7 +7,7 @@ namespace ZMJ{
 /* heap算法： push_heap , pop_heap , sort_heap , make_heap */
 /*使用array，vector容器作为heap的容器。*/
 
-/*************************************************heap_push**************************************************/
+/*************************************************push_heap**************************************************/
 
 /*根据给定位置holeIndex，做上虑操作。直到holeIndex的父节点大于value停止（大根堆）。*/
 template<class RandomAccessIterator,class Distance,class T>
