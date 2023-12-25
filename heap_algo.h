@@ -64,7 +64,7 @@ inline void push_heap(RandomAccessIterator first, RandomAccessIterator last, Com
 /* [first,last) 表示容器的首尾,将会把heap根元素放入尾部，并调整heap*/
 
 template<class RandomAccessIterator, class T, class Distance>
-inline void adjust_heap(RandomAccessIterator first, Distance holeIndex,Distance len,T value){
+void adjust_heap(RandomAccessIterator first, Distance holeIndex,Distance len,T value){
     auto topIndex = holeIndex;
     auto rchild = 2 * holeIndex + 2;
     while(rchild < len){
@@ -85,19 +85,20 @@ inline void adjust_heap(RandomAccessIterator first, Distance holeIndex,Distance 
 }
 
 template<class RandomAccessIterator, class T, class Distance>
-inline void pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last,
+void pop_heap_aux(RandomAccessIterator first, RandomAccessIterator last,
     RandomAccessIterator result,T value,Distance*){
     *result = *first;/*尾值被覆盖，难道不是跟尾值交换？并不会，原尾值被作为value参数传递进来！*/
     adjust_heap(first,Distance(0),Distance(last - first),value);
 }
 
 template<class RandomAccessIterator, class T>
-inline void pop_heap(RandomAccessIterator first, RandomAccessIterator last, T*){
+void pop_heap(RandomAccessIterator first, RandomAccessIterator last, T*){
     pop_heap_aux(first,last-1,last-1,*(last-1),distance_type(first));
 }
 
 template<class RandomAccessIterator, class T, class Distance,class Compare>
-inline void adjust_heap(RandomAccessIterator first, Distance holeIndex, Distance len, T value,Compare comp){
+void adjust_heap(RandomAccessIterator first, Distance holeIndex,
+    Distance len, T value,Compare comp){
     Distance topIndex = holeIndex;
     Distance rchild = 2 * holeIndex + 2;
     while(rchild < len){
@@ -113,15 +114,15 @@ inline void adjust_heap(RandomAccessIterator first, Distance holeIndex, Distance
     push_heap_aux(first,holeIndex,topIndex,value,comp);
 }
 
-template<class RandomAccessIterator, class T, class Distance,class Compare>
-inline void pop_head_aux(RandomAccessIterator first, RandomAccessIterator last,
+template<class RandomAccessIterator,class T,class Distance,class Compare>
+void pop_head_aux(RandomAccessIterator first, RandomAccessIterator last,
     RandomAccessIterator result, T value, Distance*,Compare comp){
     *result = *first;
-    adjust_heap(first,static_cast<Distance>(0),last - first,value,comp);
+    adjust_heap(first,(Distance)0,last - first,value,comp);
 }
 
 template<class RandomAccessIterator,class Compare>
-inline void pop_head(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
+void pop_head(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
     pop_head_aux(first,last-1,last-1,*(last-1),distance_type(first),comp);
 }
 
