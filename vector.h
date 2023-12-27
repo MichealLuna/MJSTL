@@ -107,9 +107,8 @@ protected:
     void vector_construct(InputIterator first,InputIterator last,__false_type);
     void destory_and_deallocate();
     void allocate_and_fill(size_type n,const T& value);
-    iterator allocate_and_copy(iterator first,iterator last);
+    void allocate_and_copy(iterator first,iterator last);
     void insert_aux(iterator position,const T& value);
-public:
 };
 
 template<class T,class Alloc>
@@ -259,12 +258,11 @@ void vector<T,Alloc>::allocate_and_fill(size_type n,const T& value){
 
 /*配置空间并复制内容,返回容器开始的迭代器*/
 template <class T, class Alloc>
-vector<T,Alloc>::iterator vector<T,Alloc>::allocate_and_copy(iterator first,iterator last){
+void vector<T,Alloc>::allocate_and_copy(iterator first,iterator last){
     difference_type n = last - first;
     start = data_allocator::allocate(n);
     finish = uninitialized_copy(first,last,start);
     end_of_storage = finish;
-    return start;
 }
 
 // insert_aux 函数
