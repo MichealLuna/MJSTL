@@ -9,7 +9,6 @@
 
 namespace ZMJ{
 
-
 template <class T>
 inline T* __allocate(ptrdiff_t size, T*){
     std::set_new_handler(0);
@@ -28,7 +27,7 @@ inline void __deallocate(T* buffer){
 
 template <class T,class V>
 inline void __construct(T* p, const V& value){
-    new(p) T(value);
+    new(p) T(value); 
 }
 
 template <class T>
@@ -83,6 +82,5 @@ public:
     }
 };
 
-}
-
-#endif//allocator.h
+}// namespace ZMJ
+#endif// !__ALLOCATOR_H__
