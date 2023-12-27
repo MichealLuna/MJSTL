@@ -1585,14 +1585,6 @@ inline void sort(RandomAccessIterator first,RandomAccessIterator last,Compare co
     __final_insertion_sort(first,last,comp);
 }
 
-/*控制分割恶化的情况。*/
-template<class Size>
-inline Size __lg(Size n){ /*得到使得 2^result <= n 时，result的最大值。*/
-    Size result;
-    for(result = 0; n > 1 ; n >> 1) ++result;
-    return result;
-}
-
 /*内省式排序，先进行quick_sort,当分割行为出现恶化倾向时，改用heap_sort。*/
 template<class RandomAccessIterator,class T,class Size,class Compare>
 void __introsort_loop(RandomAccessIterator first,RandomAccessIterator last,
@@ -1758,8 +1750,6 @@ inline void random_shuffle(RandomAccessIterator first,
     for(RandomAccessIterator it = first + 1; it != last; ++it)
         iter_swap(it,first+rand((it - first) + 1));
 }
-
-
 /***********************************************adjacent_find************************************************/
 /***********************************************adjacent_find************************************************/
 /***********************************************adjacent_find************************************************/
@@ -1767,8 +1757,5 @@ inline void random_shuffle(RandomAccessIterator first,
 /***********************************************adjacent_find************************************************/
 /***********************************************adjacent_find************************************************/
 /***********************************************adjacent_find************************************************/
-
-
-}//namespace ZMJ
-
-#endif//__ALGO_H__
+}// namespace ZMJ
+#endif// !__ALGO_H__
