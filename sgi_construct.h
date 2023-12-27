@@ -2,7 +2,7 @@
 #define __SGI_CONSTRUCT_H__
 
 #include <new>
-#include <type_traits>
+#include "type_traits.h"
 namespace ZMJ
 {
 
@@ -26,7 +26,7 @@ namespace ZMJ
     template <class ForwardIterator>
     inline void destory(ForwardIterator first, ForwardIterator last)
     {
-        __destory(first, last,&*first);
+        __destory(first, last,&(*first));
     }
 
     template <class ForwardIterator, class T>
@@ -49,6 +49,5 @@ namespace ZMJ
     /*对于字符类型destory*/
     inline void destory(char *, char *) {}
     inline void destory(wchar_t *, wchar_t *) {}
-
-}//namespace ZMJ
-#endif // sgi_construct.h
+}// namespace ZMJ
+#endif // !__SGI_CONSTRUCT_H__
