@@ -89,14 +89,22 @@ public:
     iterator data() const{ return start;}
 
     /*modify container*/
+    void assign(size_type n,const T& value) { fill_assign(n,value);}
+    void assign(size_type n) { fill_assign(n,T());}
+    template<class InputIterator>
+    void assign(InputIterator first,InputIterator last);
     void push_back(const T& value);
     void pop_back();
     iterator earse(iterator position);
     iterator earse(iterator first,iterator last);
     void clear();
-    void insert(iterator pos, size_type n,const T& value);
+    iterator insert(iterator position,const T& x);
+    iterator insert(iterator position);
+    void insert(iterator position, size_type n,const T& value);
+    template<class InputIterator>
+    void insert(iterator position,InputIterator first,InputIterator last);
+
     inline void swap(vector<T,Alloc>& rhs);
-    inline void swap(vector<T,Alloc>& x,vector<T,Alloc>& y);
 
     /*about allocator*/
     allocate_type get_allocator(){ return allocate_type();}
@@ -107,8 +115,41 @@ protected:
     void vector_construct(InputIterator first,InputIterator last,__false_type);
     void destory_and_deallocate();
     void allocate_and_fill(size_type n,const T& value);
-    void allocate_and_copy(iterator first,iterator last);
+
+    template<class InputIterator>
+    void allocate_and_copy(InputIterator first,InputIterator last);
+
+    void fill_assign(size_type n,const T& value);
+
+    template<class Integer>
+    void assign_dispatch(Integer n,Integer value,__true_type);
+    template<class Integer>
+    void assign_dispatch(Integer n,Integer value,__false_type);
+
+    template<class InputItertor>
+    void assign_aux(InputItertor first,InputItertor last,input_iterator_tag);
+
+    template<class ForwardIterator>
+    void assign_aux(ForwardIterator first,ForwardIterator last,forward_iterator_tag);
+
     void insert_aux(iterator position,const T& value);
+
+    template<class Integer>
+    void insert_dispatch(iterator position,Integer n,Integer ,__true_type);
+
+    template<class InputIterator>
+    void insert_dispatch(iterator position,InputIterator first,InputIterator last,
+        __false_type);
+
+    void fill_insert(iterator position,size_type n,const T& value);
+
+    template<class InputIterator>
+    void range_insert(iterator position,InputIterator first,InputIterator last,
+        input_iterator_tag);
+    
+    template<class ForwardIterator>
+    void range_insert(iterator position,ForwardIterator first,ForwardIterator last,
+        forward_iterator_tag);
 };
 
 template<class T,class Alloc>
@@ -184,6 +225,13 @@ void vector<T,Alloc>::resize(size_type new_size,const T& value){
         insert(end(),new_size - size(),value);/*从何处开始，插入多少个，插入值是什么*/
 }
 
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::assign(InputIterator first,InputIterator last){
+    typedef typename __is_integer<InputIterator>::is_integer is_integer;
+    assign_dispatch(first,last,is_integer());
+}
+
 template <class T, class Alloc>
 void vector<T,Alloc>::push_back(const T& value){
     if(finish != end_of_storage){
@@ -239,30 +287,8 @@ void vector<T,Alloc>::swap(vector<T,Alloc>& rhs){
 }
 
 template <class T, class Alloc>
-void vector<T,Alloc>::swap(vector<T,Alloc>& x,vector<T,Alloc>& y){
+inline void swap(vector<T,Alloc>& x,vector<T,Alloc>& y){
     x.swap(y);
-}
-
-template <class T, class Alloc>
-void vector<T,Alloc>::destory_and_deallocate(){
-    destory(start,finish);
-    if(start) data_allocator::deallocate(start,end_of_storage - start);
-}
-
-template <class T, class Alloc>
-void vector<T,Alloc>::allocate_and_fill(size_type n,const T& value){
-    start = data_allocator::allocate(n);
-    finish = uninitialized_fill_n(start,n,value);
-    end_of_storage = start + n;
-}
-
-/*配置空间并复制内容,返回容器开始的迭代器*/
-template <class T, class Alloc>
-void vector<T,Alloc>::allocate_and_copy(iterator first,iterator last){
-    difference_type n = last - first;
-    start = data_allocator::allocate(n);
-    finish = uninitialized_copy(first,last,start);
-    end_of_storage = finish;
 }
 
 // insert_aux 函数
@@ -307,8 +333,39 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x){
     }
 }
 
-template <class T, class Alloc>
+template<class T,class Alloc>
+typename vector<T,Alloc>::iterator 
+vector<T,Alloc>::insert(iterator position,const T& x){
+    size_type n = position - start;
+    if(finish != end_of_storage && position == end()){
+        construct(finish,x);
+        ++finish;
+    }else
+        insert_aux(position,x);
+    return start + n;
+}
+
+template<class T,class Alloc>
+typename vector<T,Alloc>::iterator 
+vector<T,Alloc>::insert(iterator position){
+    return insert(position,T());
+}
+
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::insert(iterator position,InputIterator first,
+    InputIterator last){
+    typedef typename __is_integer<InputIterator>::is_integer is_integer;
+    insert_dispatch(position,first,last,is_integer());
+}
+
+template<class T,class Alloc>
 void vector<T, Alloc>::insert(iterator position, size_type n,const T& x){
+    fill_insert(position,n,x);
+}
+
+template <class T, class Alloc>
+void vector<T, Alloc>::fill_insert(iterator position, size_type n,const T& x){
     if(n == 0) return ;
     if(size_type(end_of_storage - finish) >= n){
         T x_copy = x;
@@ -349,6 +406,165 @@ void vector<T, Alloc>::insert(iterator position, size_type n,const T& x){
     }
 }
 
+template <class T, class Alloc>
+void vector<T,Alloc>::destory_and_deallocate(){
+    destory(start,finish);
+    if(start) data_allocator::deallocate(start,end_of_storage - start);
+}
+
+/*配置空间并初始化start,finish,end_of_storage。*/
+template <class T, class Alloc>
+void vector<T,Alloc>::allocate_and_fill(size_type n,const T& value){
+    start = data_allocator::allocate(n);
+    finish = uninitialized_fill_n(start,n,value);
+    end_of_storage = start + n;
+}
+
+/*配置空间并初始化start，finish，end_of_storage。*/
+template <class T, class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::allocate_and_copy(InputIterator first,InputIterator last){
+    difference_type n = last - first;
+    start = data_allocator::allocate(n);
+    finish = uninitialized_copy(first,last,start);
+    end_of_storage = finish;
+}
+
+template<class T,class Alloc>
+void vector<T,Alloc>::fill_assign(size_type n,const T& value){
+    if(n > capacity()){
+        vector<T,Alloc> tmp(n,value);
+        tmp.swap(*this);
+    }else if(n > size()){
+        fill(begin(),end(),value);
+        finish = uninitialized_fill_n(finish,n - size(),value);
+    }else
+        earse(fill_n(start,n,value),finish);
+}
+
+template<class T,class Alloc>
+template<class Integer>
+void vector<T,Alloc>::assign_dispatch(Integer n,Integer value,__true_type){
+    fill_assign(n,value);
+}
+
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::assign_dispatch(InputIterator first,InputIterator last,
+    __false_type){
+    assign_aux(first,last,iterator_category(first));
+}
+
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::assign_aux(InputIterator first,InputIterator last,
+    input_iterator_tag){
+    InputIterator curr = begin();
+    for(;first != last && curr != end(); ++first,++curr)
+        *curr = *first;
+    /*表示[first,last)已经填充完，但是容器的还剩下一些原先元素*/
+    if(first == last)
+        earse(curr,end());
+    else/*表示原来元素已经覆盖完毕，但是[first,last)还是没有填充完毕。*/
+        insert(end(),first,last);
+}
+
+template<class T,class Alloc>
+template<class ForwardIterator>
+void vector<T,Alloc>::assign_aux(ForwardIterator first,ForwardIterator last,
+    forward_iterator_tag){
+    difference_type len = distance(first,last);
+    if(len > capacity()){
+        destory_and_deallocate();
+        allocate_and_copy(first,last);
+    }else if(size() >= len){
+        iterator new_finish = copy(first,last,start);
+        destory(new_finish,finish);
+        finish = new_finish;
+    }else{
+        ForwardIterator mid = first;
+        advance(mid,size());
+        copy(first,mid,start);
+        finish = uninitialized_copy(mid,last,finish);
+    }
+}
+
+template<class T,class Alloc>
+template<class Integer>
+void vector<T,Alloc>::insert_dispatch(iterator position,Integer n,
+    Integer x,__true_type){
+    fill_insert(position,n,x);
+}
+
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::insert_dispatch(iterator position,InputIterator first,
+    InputIterator last,__false_type){
+    range_insert(position,first,last,iterator_category(first));
+}
+
+template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::range_insert(iterator position,InputIterator first,
+    InputIterator last,input_iterator_tag){
+    for(;first != last; ++first){
+        position = insert(position,*first);
+        ++position;
+    }
+}
+
+template<class T,class Alloc>
+template<class ForwardIterator>
+void vector<T,Alloc>::range_insert(iterator position,ForwardIterator first,
+    ForwardIterator last,forward_iterator_tag){
+    if(first != last){
+        size_type n = distance(first,last);
+        if(size_type(end_of_storage - finish) >= n){
+            const size_type after_elems = distance(position,finish);
+            iterator old_finish = finish;
+            /*
+            *  为什么要区分插入的之后元素个数after_elems 与 插入元素个数n呢？
+            *为什么要区分？为什么不两个都直接插入点开始的的元素往后挪n个位置？
+            *想了想，应该是为了考虑容器可能出现链表的情况。
+            *   链表结尾的地方是无所谓移动多少位的。只能说从结尾插入多少元素！
+            * 
+            * 但这个容器本身就是连续空间vector而不是链表，上面说法错误。
+            */
+            if(after_elems > n){
+                finish = uninitialized_copy(finish-n,finish,finish);
+                copy_backward(position,old_finish - n,old_finish);
+                copy(first,last,position);
+            }else{
+                ForwardIterator mid = first;
+                advance(mid,n - after_elems);
+                finish = uninitialized_copy(mid,last,finish);
+                finish = uninitialized_copy(position,old_finish,finish);
+                copy(first,mid,position);
+            }
+        }else{
+            const size_type old_size = size();
+            const size_type new_size = old_size + ZMJ::max(old_size,n);
+
+            iterator new_start = data_allocator::allocate(new_size);
+            iterator new_finish = new_start;
+
+            try{
+                new_finish = uninitialized_copy(start,position,new_finish);
+                new_finish = uninitialized_copy(first,last,new_finish);
+                new_finish = uninitialized_copy(position,last,new_finish);
+            }catch(...){
+                destory(new_start,new_finish);
+                data_allocator::deallocate(new_start,new_size);
+                throw;
+            }
+
+            destory_and_deallocate();
+            start = new_start;
+            finish = new_finish;
+            end_of_storage = start + new_size;
+        }
+    }
+}
 
 template<class T,class Alloc>
 inline bool operator==(vector<T,Alloc>& x,vector<T,Alloc>& y){
