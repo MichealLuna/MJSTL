@@ -1,8 +1,10 @@
 #ifndef __ITERATOR_H__
 #define __ITERATOR_H__
 
-#include <stddef.h>
-
+#ifndef USE_CSTDDEF
+#define USE_CSTDDEF
+#include <cstddef>
+#endif // !USE_CSTDDEF
 namespace ZMJ
 {
     struct input_iterator_tag{};
@@ -138,4 +140,4 @@ namespace ZMJ
     }
 
 } // namespace ZMJ
-#endif//iterator.h
+#endif// !__ITERATOR_H__
