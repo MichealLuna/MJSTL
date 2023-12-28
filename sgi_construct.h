@@ -1,7 +1,12 @@
 #ifndef __SGI_CONSTRUCT_H__
 #define __SGI_CONSTRUCT_H__
 
+#ifndef USE_NEW
+#define USE_NEW
 #include <new>
+#endif // !USE_NEW
+
+#include "iterator.h"
 #include "type_traits.h"
 namespace ZMJ
 {
