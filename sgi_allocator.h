@@ -369,13 +369,13 @@ namespace ZMJ
     class simple_alloc
     {
     public:
-        using value_type = T;
-        using pointer = T *;
-        using const_pointer = const T *;
-        using reference = T &;
-        using const_reference = const T &;
-        using size_type = size_t;
-        using difference_type = ptrdiff_t;
+        typedef T               value_type;
+        typedef T*                pointer;
+        typedef const T*          const_pointer;
+        typedef T&                reference;
+        typedef const T&          const_reference;
+        typedef size_t            size_type;
+        typedef ptrdiff_t         difference_type;
 
     public:
         template<class U>
@@ -396,52 +396,90 @@ namespace ZMJ
         };
 
     public:
-        pointer allocate(size_t n)
-        {
-            return 0 == n ? 0 : (T *)alloc::allocate(n * sizeof(T));
-        }
-
-        pointer allocate()
-        {
-            return (T *)alloc::allocate(sizeof(T));
-        }
-
-        void deallocate(T *p, size_t n)
-        {
-            if (n != 0)
-                alloc::deallocate(p, n * sizeof(T));
-        }
-
-        void deallocate(T *p)
-        {
-            alloc::deallocate(p, sizeof(T));
-        }
-
-        void construct(T *p, const T &val)
-        {
-            ZMJ::construct(p, val);
-        }
-
-        void destroy(T *p)
-        {
-            ZMJ::destory(p);
-        }
-
-        pointer address(reference x)
-        {
-            return (pointer)&x;
-        }
-
-        const_pointer address(const_reference x)
-        {
-            return (const_pointer)&x;
-        }
-
-        size_type max_size()
-        {
-            return size_type(UINT_MAX / sizeof(value_type));
-        }
-
+        pointer allocate(size_t n);
+        pointer allocate();
+        void deallocate(T *p, size_t n);
+        void deallocate(T *p);
+        void construct(T* ptr);
+        void construct(T *p, const T &val);
+        void destroy(T *p);
+        void destroy(T* first,T* last);
+        pointer address(reference x);
+        const_pointer address(const_reference x);
+        size_type max_size();
     }; // end simple_alloc
+
+
+template<class T,class Alloc>
+simple_alloc<T,Alloc>::pointer 
+simple_alloc<T,Alloc>::allocate(size_t n)
+{
+    return 0 == n ? 0 : (T *)alloc::allocate(n * sizeof(T));
+}
+
+template<class T,class Alloc>
+simple_alloc<T,Alloc>::pointer 
+simple_alloc<T,Alloc>::allocate()
+{
+    return (T *)alloc::allocate(sizeof(T));
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::deallocate(T *p, size_t n)
+{
+    if (p == 0) return;
+    alloc::deallocate(p, n * sizeof(T));
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::deallocate(T *p)
+{
+    if(p == 0) return;
+    alloc::deallocate(p, sizeof(T));
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::construct(T* ptr){
+    ZMJ::construct(ptr);
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::construct(T *p, const T &val)
+{
+    ZMJ::construct(p, val);
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::destroy(T *p)
+{
+    ZMJ::destory(p);
+}
+
+template<class T,class Alloc>
+void simple_alloc<T,Alloc>::destroy(T* first,T* last){
+    ZMJ::destory(first,last);
+}
+
+template<class T,class Alloc>
+simple_alloc<T,Alloc>::pointer 
+simple_alloc<T,Alloc>::address(reference x)
+{
+    return (pointer)&x;
+}
+
+template<class T,class Alloc>
+simple_alloc<T,Alloc>::const_pointer 
+simple_alloc<T,Alloc>::address(const_reference x)
+{
+    return (const_pointer)&x;
+}
+
+template<class T,class Alloc>
+simple_alloc<T,Alloc>::size_type 
+simple_alloc<T,Alloc>::max_size()
+{
+    return size_type(UINT_MAX / sizeof(value_type));
+}
+
 } // namespace ZMJ
-#endif // sgi_allocator.h
+#endif // !__SGI_ALLOCATOR_H__
