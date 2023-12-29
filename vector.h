@@ -92,8 +92,8 @@ public:
     void assign(InputIterator first,InputIterator last);
     void push_back(const T& value);
     void pop_back();
-    iterator earse(iterator position);
-    iterator earse(iterator first,iterator last);
+    iterator erase(iterator position);
+    iterator erase(iterator first,iterator last);
     void clear();
     iterator insert(iterator position,const T& x);
     iterator insert(iterator position);
@@ -114,7 +114,7 @@ protected:
 
     template<class InputIterator>
     void __vector_construct(InputIterator first,InputIterator last,__false_type);
-    
+
     void __destory_and_deallocate();
     void __allocate_and_fill(size_type n,const T& value);
 
@@ -222,7 +222,7 @@ vector<T,Alloc>& vector<T,Alloc>::operator=(vector<T,Alloc>&& x){
 template <class T, class Alloc>
 void vector<T,Alloc>::resize(size_type new_size,const T& value){
     if(new_size < size())
-        earse(begin() + new_size,end());
+        erase(begin() + new_size,end());
     else
         insert(end(),new_size - size(),value);/*从何处开始，插入多少个，插入值是什么*/
 }
@@ -255,7 +255,7 @@ void vector<T,Alloc>::pop_back(){
 
 template <class T, class Alloc>
 vector<T,Alloc>::iterator 
-vector<T,Alloc>::earse(iterator position){
+vector<T,Alloc>::erase(iterator position){
     if(position + 1 != end())
         copy(position+1,finish,position);
     /*
@@ -274,7 +274,7 @@ vector<T,Alloc>::earse(iterator position){
 
 template <class T, class Alloc>
 vector<T,Alloc>::iterator 
-vector<T,Alloc>::earse(iterator first,iterator last){
+vector<T,Alloc>::erase(iterator first,iterator last){
     iterator it = copy(last,finish,first);
     data_allocator::destory(it,finish);
     finish = finish - (last - first);
@@ -441,7 +441,7 @@ void vector<T,Alloc>::__fill_assign(size_type n,const T& value){
         fill(begin(),end(),value);
         finish = uninitialized_fill_n(finish,n - size(),value);
     }else
-        earse(fill_n(start,n,value),finish);
+        erase(fill_n(start,n,value),finish);
 }
 
 template<class T,class Alloc>
@@ -486,7 +486,7 @@ void vector<T,Alloc>::__assign_aux(InputIterator first,InputIterator last,
         *curr = *first;
     /*表示[first,last)已经填充完，但是容器的还剩下一些原先元素*/
     if(first == last)
-        earse(curr,end());
+        erase(curr,end());
     else/*表示原来元素已经覆盖完毕，但是[first,last)还是没有填充完毕。*/
         insert(end(),first,last);
 }
