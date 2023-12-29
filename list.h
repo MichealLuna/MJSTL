@@ -540,5 +540,41 @@ void list<T,Alloc>::__transfer(iterator position,iterator first,iterator last){
     (link_type)first.node->prev->next = (link_type)first.node;
     (link_type)position.node->prev = (link_type)last.node->prev
 }
+
+template<class T,class Alloc>
+inline bool operator==(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    typedef typename list<T,Alloc>::const_iterator const_iterator;
+    const_iterator first1 = x.begin();
+    const_iterator last1 = x.end();
+    const_iterator first2 = y.begin();
+    const_iterator last2 = y.end();
+    for(;first1 != last1 && first2 != last2; ++first1,++first2);
+    return first1 == last1 && first2 == last2;
+}
+
+template<class T,class Alloc>
+inline bool operator<(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    return ZMJ::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
+}
+
+template<class T,class Alloc>
+inline bool operator>(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    return y < x;
+}
+
+template<class T,class Alloc>
+inline bool operator<=(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    return !(y < x);
+}
+
+template<class T,class Alloc>
+inline bool operator>=(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    return !(x < y);
+}
+
+template<class T,class Alloc>
+inline void swap(const list<T,Alloc>& x,const list<T,Alloc>& y){
+    x.swap(y);
+}
 } // namespace ZMJ
 #endif// !__LIST_H__
