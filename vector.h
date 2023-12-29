@@ -37,21 +37,21 @@ protected:
 public:
     /*construct,assignment,destruct*/
     vector():start(nullptr),finish(nullptr),end_of_storage(nullptr){}
-    explicit vector(size_type n){ allocate_and_fill(n,T()); }
-    vector(size_type n, const T& value){ allocate_and_fill(n,value); }
+    explicit vector(size_type n){ __allocate_and_fill(n,T()); }
+    vector(size_type n, const T& value){ __allocate_and_fill(n,value); }
     template<class InputIterator>
     vector(InputIterator first,InputIterator last);
 
     /*copy construct*/
-    vector(const vector<T,Alloc>& x);
-    vector(vector<T,Alloc>&& x);
+    vector(const vector& x);
+    vector(vector&& x);
 
     /*assignment operator*/
-    vector<T,Alloc>& operator=(const vector<T,Alloc>& x);
-    vector<T,Alloc>& operator=(vector<T,Alloc>&& x);
+    vector& operator=(const vector& x);
+    vector& operator=(vector&& x);
 
     /*destrust*/
-    ~vector(){ destory_and_deallocate(); }
+    ~vector(){ __destory_and_deallocate(); }
 public:
     /*about iterator*/
     iterator begin() { return start; }
@@ -67,9 +67,6 @@ public:
     size_type size() const{ return size_type(end() - begin());}
     size_type max_size() const{ return size_type(-1)/sizeof(T);}
     size_type capacity() const{ return size_type(end_of_storage - begin());}
-    bool empty() const{ return begin() == end();}
-    void resize(size_type new_size,const T& value);
-    void resize(size_type new_size){ return resize(new_size,T());}
 
     /*access container*/
     reference operator[](size_type n){ return *(begin() + n);}
@@ -89,8 +86,8 @@ public:
     iterator data() const{ return start;}
 
     /*modify container*/
-    void assign(size_type n,const T& value) { fill_assign(n,value);}
-    void assign(size_type n) { fill_assign(n,T());}
+    void assign(size_type n,const T& value) { __fill_assign(n,value);}
+    void assign(size_type n) { __fill_assign(n,T());}
     template<class InputIterator>
     void assign(InputIterator first,InputIterator last);
     void push_back(const T& value);
@@ -103,52 +100,57 @@ public:
     void insert(iterator position, size_type n,const T& value);
     template<class InputIterator>
     void insert(iterator position,InputIterator first,InputIterator last);
-
     inline void swap(vector<T,Alloc>& rhs);
+    bool empty() const{ return begin() == end();}
+    void resize(size_type new_size,const T& value);
+    void resize(size_type new_size){ return resize(new_size,T());}
 
     /*about allocator*/
     allocate_type get_allocator(){ return allocate_type();}
+
 protected:
     template<class Integer>
-    void vector_construct(Integer n,Integer value,__true_type);
-    template<class InputIterator>
-    void vector_construct(InputIterator first,InputIterator last,__false_type);
-    void destory_and_deallocate();
-    void allocate_and_fill(size_type n,const T& value);
+    void __vector_construct(Integer n,Integer value,__true_type);
 
     template<class InputIterator>
-    void allocate_and_copy(InputIterator first,InputIterator last);
+    void __vector_construct(InputIterator first,InputIterator last,__false_type);
+    
+    void __destory_and_deallocate();
+    void __allocate_and_fill(size_type n,const T& value);
 
-    void fill_assign(size_type n,const T& value);
+    template<class InputIterator>
+    void __allocate_and_copy(InputIterator first,InputIterator last);
+
+    void __fill_assign(size_type n,const T& value);
 
     template<class Integer>
-    void assign_dispatch(Integer n,Integer value,__true_type);
-    template<class Integer>
-    void assign_dispatch(Integer n,Integer value,__false_type);
+    void __assign_dispatch(Integer n,Integer value,__true_type);
+    template<class InputIterator>
+    void __assign_dispatch(InputIterator first,InputIterator last,__false_type);
 
     template<class InputItertor>
-    void assign_aux(InputItertor first,InputItertor last,input_iterator_tag);
+    void __assign_aux(InputItertor first,InputItertor last,input_iterator_tag);
 
     template<class ForwardIterator>
-    void assign_aux(ForwardIterator first,ForwardIterator last,forward_iterator_tag);
+    void __assign_aux(ForwardIterator first,ForwardIterator last,forward_iterator_tag);
 
-    void insert_aux(iterator position,const T& value);
+    void __insert_aux(iterator position,const T& value);
 
     template<class Integer>
-    void insert_dispatch(iterator position,Integer n,Integer ,__true_type);
+    void __insert_dispatch(iterator position,Integer n,Integer ,__true_type);
 
     template<class InputIterator>
-    void insert_dispatch(iterator position,InputIterator first,InputIterator last,
+    void __insert_dispatch(iterator position,InputIterator first,InputIterator last,
         __false_type);
 
-    void fill_insert(iterator position,size_type n,const T& value);
+    void __fill_insert(iterator position,size_type n,const T& value);
 
     template<class InputIterator>
-    void range_insert(iterator position,InputIterator first,InputIterator last,
+    void __range_insert(iterator position,InputIterator first,InputIterator last,
         input_iterator_tag);
     
     template<class ForwardIterator>
-    void range_insert(iterator position,ForwardIterator first,ForwardIterator last,
+    void __range_insert(iterator position,ForwardIterator first,ForwardIterator last,
         forward_iterator_tag);
 };
 
@@ -156,25 +158,25 @@ template<class T,class Alloc>
 template<class InputIterator>
 vector<T,Alloc>::vector(InputIterator first,InputIterator last){
     typename __is_integer<InputIterator>::is_integer integer;
-    vector_construct(first,last,integer());
+    __vector_construct(first,last,integer());
 }
 
 template<class T,class Alloc>
 template<class Integer>
-void vector<T,Alloc>::vector_construct(Integer n,Integer value,__true_type){
-    allocate_and_fill(n,value);
+void vector<T,Alloc>::__vector_construct(Integer n,Integer value,__true_type){
+    __allocate_and_fill(n,value);
 }
 
 template<class T,class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::vector_construct(InputIterator first,
+void vector<T,Alloc>::__vector_construct(InputIterator first,
     InputIterator last,__false_type){
-    allocate_and_copy(first,last);
+    __allocate_and_copy(first,last);
 }
 
 template <class T, class Alloc>
 vector<T, Alloc>::vector(const vector<T, Alloc>& x) {
-	allocate_and_copy(x.begin(), x.end());
+	__allocate_and_copy(x.begin(), x.end());
 }
 
 template <class T, class Alloc>
@@ -191,8 +193,8 @@ vector<T,Alloc>& vector<T,Alloc>::operator=(const vector<T,Alloc>& x){
         const auto len = rhs.size();
         /*要重分配空间*/
         if(len > capacity()){
-            destory_and_deallocate();
-            allocate_and_copy(x.begin(),x.end());
+            __destory_and_deallocate();
+            __allocate_and_copy(x.begin(),x.end());
         }else if(size() >= len){/*不用重新分配空间*/
             iterator it = copy(x.begin(),x.end(),start);
             ZMJ::destory(it,finish);
@@ -208,7 +210,7 @@ vector<T,Alloc>& vector<T,Alloc>::operator=(const vector<T,Alloc>& x){
 template <class T, class Alloc>
 vector<T,Alloc>& vector<T,Alloc>::operator=(vector<T,Alloc>&& x){
     if(this != &x){
-        destory_and_deallocate();
+        __destory_and_deallocate();
         start = x.start;
         finish = x.finish;
         end_of_storage = x.end_of_storage;
@@ -229,7 +231,7 @@ template<class T,class Alloc>
 template<class InputIterator>
 void vector<T,Alloc>::assign(InputIterator first,InputIterator last){
     typedef typename __is_integer<InputIterator>::is_integer is_integer;
-    assign_dispatch(first,last,is_integer());
+    __assign_dispatch(first,last,is_integer());
 }
 
 template <class T, class Alloc>
@@ -239,7 +241,7 @@ void vector<T,Alloc>::push_back(const T& value){
         ++finish;
     }
     else{
-        insert_aux(end(), value);
+        __insert_aux(end(), value);
     }
 }
 
@@ -291,9 +293,9 @@ inline void swap(vector<T,Alloc>& x,vector<T,Alloc>& y){
     x.swap(y);
 }
 
-// insert_aux 函数
+//__insert_aux 函数
 template <class T, class Alloc>
-void vector<T, Alloc>::insert_aux(iterator position, const T& x){
+void vector<T, Alloc>::__insert_aux(iterator position, const T& x){
     if(size() + 1 <= capacity()){ /*有剩余空间*/
         construct(finish,back());
         ++finish;
@@ -326,7 +328,7 @@ void vector<T, Alloc>::insert_aux(iterator position, const T& x){
             data_allocator::deallocate(new_start,new_size);
             throw;
         }
-        destory_and_deallocate();
+        __destory_and_deallocate();
         start = new_start;
         finish = new_finish;
         end_of_storage = start + new_size;
@@ -341,7 +343,7 @@ vector<T,Alloc>::insert(iterator position,const T& x){
         construct(finish,x);
         ++finish;
     }else
-        insert_aux(position,x);
+        __insert_aux(position,x);
     return start + n;
 }
 
@@ -356,16 +358,16 @@ template<class InputIterator>
 void vector<T,Alloc>::insert(iterator position,InputIterator first,
     InputIterator last){
     typedef typename __is_integer<InputIterator>::is_integer is_integer;
-    insert_dispatch(position,first,last,is_integer());
+    __insert_dispatch(position,first,last,is_integer());
 }
 
 template<class T,class Alloc>
 void vector<T, Alloc>::insert(iterator position, size_type n,const T& x){
-    fill_insert(position,n,x);
+    __fill_insert(position,n,x);
 }
 
 template <class T, class Alloc>
-void vector<T, Alloc>::fill_insert(iterator position, size_type n,const T& x){
+void vector<T, Alloc>::__fill_insert(iterator position, size_type n,const T& x){
     if(n == 0) return ;
     if(size_type(end_of_storage - finish) >= n){
         T x_copy = x;
@@ -399,7 +401,7 @@ void vector<T, Alloc>::fill_insert(iterator position, size_type n,const T& x){
             data_allocator::deallocate(new_finish,new_size);
             throw;
         }
-        destory_and_deallocate();
+        __destory_and_deallocate();
         start = new_start;
         finish = new_finish;
         end_of_storage = start + new_size;
@@ -407,14 +409,14 @@ void vector<T, Alloc>::fill_insert(iterator position, size_type n,const T& x){
 }
 
 template <class T, class Alloc>
-void vector<T,Alloc>::destory_and_deallocate(){
+void vector<T,Alloc>::__destory_and_deallocate(){
     destory(start,finish);
     if(start) data_allocator::deallocate(start,end_of_storage - start);
 }
 
 /*配置空间并初始化start,finish,end_of_storage。*/
 template <class T, class Alloc>
-void vector<T,Alloc>::allocate_and_fill(size_type n,const T& value){
+void vector<T,Alloc>::__allocate_and_fill(size_type n,const T& value){
     start = data_allocator::allocate(n);
     finish = uninitialized_fill_n(start,n,value);
     end_of_storage = start + n;
@@ -423,7 +425,7 @@ void vector<T,Alloc>::allocate_and_fill(size_type n,const T& value){
 /*配置空间并初始化start，finish，end_of_storage。*/
 template <class T, class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::allocate_and_copy(InputIterator first,InputIterator last){
+void vector<T,Alloc>::__allocate_and_copy(InputIterator first,InputIterator last){
     difference_type n = last - first;
     start = data_allocator::allocate(n);
     finish = uninitialized_copy(first,last,start);
@@ -431,7 +433,7 @@ void vector<T,Alloc>::allocate_and_copy(InputIterator first,InputIterator last){
 }
 
 template<class T,class Alloc>
-void vector<T,Alloc>::fill_assign(size_type n,const T& value){
+void vector<T,Alloc>::__fill_assign(size_type n,const T& value){
     if(n > capacity()){
         vector<T,Alloc> tmp(n,value);
         tmp.swap(*this);
@@ -444,39 +446,25 @@ void vector<T,Alloc>::fill_assign(size_type n,const T& value){
 
 template<class T,class Alloc>
 template<class Integer>
-void vector<T,Alloc>::assign_dispatch(Integer n,Integer value,__true_type){
-    fill_assign(n,value);
+void vector<T,Alloc>::__assign_dispatch(Integer n,Integer value,__true_type){
+    __fill_assign(n,value);
 }
 
 template<class T,class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::assign_dispatch(InputIterator first,InputIterator last,
+void vector<T,Alloc>::__assign_dispatch(InputIterator first,InputIterator last,
     __false_type){
-    assign_aux(first,last,iterator_category(first));
-}
-
-template<class T,class Alloc>
-template<class InputIterator>
-void vector<T,Alloc>::assign_aux(InputIterator first,InputIterator last,
-    input_iterator_tag){
-    InputIterator curr = begin();
-    for(;first != last && curr != end(); ++first,++curr)
-        *curr = *first;
-    /*表示[first,last)已经填充完，但是容器的还剩下一些原先元素*/
-    if(first == last)
-        earse(curr,end());
-    else/*表示原来元素已经覆盖完毕，但是[first,last)还是没有填充完毕。*/
-        insert(end(),first,last);
+    __assign_aux(first,last,iterator_category(first));
 }
 
 template<class T,class Alloc>
 template<class ForwardIterator>
-void vector<T,Alloc>::assign_aux(ForwardIterator first,ForwardIterator last,
+void vector<T,Alloc>::__assign_aux(ForwardIterator first,ForwardIterator last,
     forward_iterator_tag){
     difference_type len = distance(first,last);
     if(len > capacity()){
-        destory_and_deallocate();
-        allocate_and_copy(first,last);
+        __destory_and_deallocate();
+        __allocate_and_copy(first,last);
     }else if(size() >= len){
         iterator new_finish = copy(first,last,start);
         destory(new_finish,finish);
@@ -490,22 +478,36 @@ void vector<T,Alloc>::assign_aux(ForwardIterator first,ForwardIterator last,
 }
 
 template<class T,class Alloc>
+template<class InputIterator>
+void vector<T,Alloc>::__assign_aux(InputIterator first,InputIterator last,
+    input_iterator_tag){
+    InputIterator curr = begin();
+    for(;first != last && curr != end(); ++first,++curr)
+        *curr = *first;
+    /*表示[first,last)已经填充完，但是容器的还剩下一些原先元素*/
+    if(first == last)
+        earse(curr,end());
+    else/*表示原来元素已经覆盖完毕，但是[first,last)还是没有填充完毕。*/
+        insert(end(),first,last);
+}
+
+template<class T,class Alloc>
 template<class Integer>
-void vector<T,Alloc>::insert_dispatch(iterator position,Integer n,
+void vector<T,Alloc>::__insert_dispatch(iterator position,Integer n,
     Integer x,__true_type){
-    fill_insert(position,n,x);
+    __fill_insert(position,n,x);
 }
 
 template<class T,class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::insert_dispatch(iterator position,InputIterator first,
+void vector<T,Alloc>::__insert_dispatch(iterator position,InputIterator first,
     InputIterator last,__false_type){
-    range_insert(position,first,last,iterator_category(first));
+    __range_insert(position,first,last,iterator_category(first));
 }
 
 template<class T,class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::range_insert(iterator position,InputIterator first,
+void vector<T,Alloc>::__range_insert(iterator position,InputIterator first,
     InputIterator last,input_iterator_tag){
     for(;first != last; ++first){
         position = insert(position,*first);
@@ -515,7 +517,7 @@ void vector<T,Alloc>::range_insert(iterator position,InputIterator first,
 
 template<class T,class Alloc>
 template<class ForwardIterator>
-void vector<T,Alloc>::range_insert(iterator position,ForwardIterator first,
+void vector<T,Alloc>::__range_insert(iterator position,ForwardIterator first,
     ForwardIterator last,forward_iterator_tag){
     if(first != last){
         size_type n = distance(first,last);
@@ -558,7 +560,7 @@ void vector<T,Alloc>::range_insert(iterator position,ForwardIterator first,
                 throw;
             }
 
-            destory_and_deallocate();
+            __destory_and_deallocate();
             start = new_start;
             finish = new_finish;
             end_of_storage = start + new_size;
