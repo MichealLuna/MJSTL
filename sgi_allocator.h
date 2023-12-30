@@ -194,11 +194,16 @@ namespace ZMJ
         obj *volatile *free_list_node;
         obj *result;
 
+        /*如果申请的空间大于128，则使用一级内存分配器。*/
         if (bytes > (size_t)max_size)
         {
             return malloc_alloc::allocate(bytes);
         }
 
+        /*申请的内存空间小于等于128字节，使用二级内存分配器。*/
+        /*
+        *   考虑多线程，这里需要加一把锁，但这里加锁临界区似乎太大了。
+        */
         free_list_node = free_list + free_list_index(bytes);
         result = *free_list_node;
 
@@ -224,6 +229,9 @@ namespace ZMJ
             malloc_alloc::deallocate(p, n);
             return;
         }
+
+        /*如果释放的空间小于等于128字节，说明是使用二级分配器获得的内存。*/
+        /*考虑多线程的话，这里也需要加锁限制。*/
         free_list_node = free_list + free_list_index(n);
         q->free_list_next = (*free_list_node);
         *free_list_node = q;
@@ -299,7 +307,7 @@ namespace ZMJ
             result = start_free;
             start_free += total_bytes;
             return result;
-        }
+        }/*内存池余量最少够1个块大小，直接把剩余块都尽量返回。*/
         else if (bytes_left >= size)
         {
             nobjs = bytes_left / size;
@@ -307,21 +315,21 @@ namespace ZMJ
             result = start_free;
             start_free += total_bytes;
             return result;
-        }
+        }/*内存池余量连1个size大小的块都没了，必须申请。*/
         else
         {
             /*
-             *   需要分清内存池、free_list是不同的。
+             *   需要分清内存池和free_list是不同的。
              *       内存池：是由start_free,end_free、head_size管理。
-             *       free_list：管理从内存池来到空余空间，和用户释放的空间。
+             *       free_list：管理从内存池获得的空间，并管理空余空间。
              *
              *   重新分配之前，把内存池的剩余空间分配给free_list。
              *   一个原因，要扩容了，需要分配新空间，那么使用realloc，还是malloc呢？
              *       如果是realloc，那么开销就大了，而且也得改改start_free、和end_free，
-             *   而且是不可能的，会把free_list管理的内存块全部无效。
+             *   并且realloc会把free_list管理的内存块全部无效。
              *
              *       那么为什么不把当前start_free ~ end_free的内存全部分配到free_list呢？
-             *   这样既不用realloc的内存拷贝也不用负担重新分配之后start_free,end_free应该在哪里的负担。
+             *   这样既不用realloc的内存拷贝也不用考虑重新分配之后start_free,end_free应该在哪里。
              *   然后，还可以直接使用malloc重新获得新的内存池。
              */
             /*扩容规则： 2倍需要申请的空间 + 16分之一的当前堆大小 */
@@ -335,6 +343,7 @@ namespace ZMJ
             }
 
             start_free = (char *)malloc(bytes_to_get);
+            /*如果malloc还是没有分配到内存，那么就看看free_list里面的空闲空间。*/
             if (start_free == NULL)
             {
                 obj *volatile *free_list_node, *p;
@@ -342,17 +351,36 @@ namespace ZMJ
                 {
                     free_list_node = free_list + free_list_index(i);
                     p = *free_list_node;
+                    /*在空闲空间找到。*/
                     if (p != NULL)
                     {
+                        /*这里需要从空闲链表中取出一个块，给内存池扩充。*/
                         *free_list_node = p->free_list_next;
                         start_free = (char *)p;
                         end_free = start_free + i;
+                        /*
+                        *   递归，但不用担心，其实只有1层。
+                        * 因为这里的start_free,end_free已经获得了足够的空间，
+                        * 进入下一层后，一定可以获得至少一个size大小的块，要么
+                        * 进入第一个if，要么第二个else if，不会来到这里。
+                        */
                         return chunk_alloc(size, nobjs);
                     }
+                    /*如果没有，则向下一个8的倍数空间获取。*/
                 }
+                /*      如果空闲空间也没有。
+                *   那么调用一级空间配置器，其实也不指望它可以获得，
+                * 主要目的是通过这个配置器，触发异常，通知外界。
+                */
                 end_free = 0;
                 start_free = (char *)malloc_alloc::allocate(bytes_to_get);
             }
+
+            /*      malloc直接获得足够的内存。
+            *   更新内存池空间，并重新调用chunk_alloc，值得注意的是，
+            *   如果malloc没有分配到足够的内存进入上面的if代码块，
+            *   它不会执行到下面的代码块，因为在if块内要么返回，要么异常。
+            */
             heap_size += bytes_to_get;
             end_free = start_free + bytes_to_get;
             return (chunk_alloc(size, nobjs));
