@@ -1,2 +1,2 @@
 .vscode/
-test/alloc_t.exe
+test/*.exe
