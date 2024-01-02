@@ -29,26 +29,26 @@ namespace ZMJ
 
     /*对于迭代器版本的destory*/
     template <class ForwardIterator>
-    inline void destory(ForwardIterator first, ForwardIterator last)
+    inline void __destory_aux(ForwardIterator first, ForwardIterator last, __true_type) {}
+
+    template <class ForwardIterator>
+    inline void __destory_aux(ForwardIterator first, ForwardIterator last, __false_type)
     {
-        __destory(first, last,&(*first));
+        for (; first != last; ++first)
+            destory(&(*first));
     }
 
     template <class ForwardIterator, class T>
     inline void __destory(ForwardIterator first, ForwardIterator last, T *)
     {
-        using trivial_destructor = std::has_virtual_destructor<T>;
-        __destory_aux(first, last, trivial_destructor());
+        typedef typename __type_traits<T>::has_trivial_destructor has_trivial_destructor;
+        __destory_aux(first, last, has_trivial_destructor());
     }
 
     template <class ForwardIterator>
-    inline void __destory_aux(ForwardIterator first, ForwardIterator last, std::true_type) {}
-
-    template <class ForwardIterator>
-    inline void __destory_aux(ForwardIterator first, ForwardIterator last, std::false_type)
+    inline void destory(ForwardIterator first, ForwardIterator last)
     {
-        for (; first != last; ++first)
-            destory(&(*first));
+        __destory(first, last,&(*first));
     }
 
     /*对于字符类型destory*/
