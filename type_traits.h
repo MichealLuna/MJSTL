@@ -1,11 +1,11 @@
 #ifndef __TYPE_TRAITS_H__
 #define __TYPE_TRAITS_H__
 
-struct __false_type{};
+/*编译器内置了下面两种类型，冲突了。*/
 struct __true_type{};
+struct __false_type{};
 
-template<class T> 
-struct __type_traits{
+template<class T> struct __type_traits{
     typedef  __true_type this_dummy_member_must_be_first;
     typedef __false_type has_trivial_default_constructor;
     typedef __false_type has_trivial_copy_constructor;
@@ -13,16 +13,14 @@ struct __type_traits{
     typedef __false_type has_trivial_destructor;
     typedef __false_type is_POD_type;
 };
-template<>
-struct __type_traits<bool>{
+template<> struct __type_traits<bool>{
     typedef __true_type has_trivial_default_constructor;
     typedef __true_type has_trivial_copy_constructor;
     typedef __true_type has_trivial_assignment_operator;
     typedef __true_type has_trivial_destructor;
     typedef __true_type is_POD_type;
 };
-template<>
-struct __type_traits<char>{
+template<> struct __type_traits<char>{
     typedef __true_type has_trivial_default_constructor;
     typedef __true_type has_trivial_copy_constructor;
     typedef __true_type has_trivial_assignment_operator;
@@ -31,8 +29,7 @@ struct __type_traits<char>{
 };
 
 
-template<>
-struct __type_traits<signed char>{
+template<> struct __type_traits<signed char>{
     typedef __true_type has_trivial_default_constructor;
     typedef __true_type has_trivial_copy_constructor;
     typedef __true_type has_trivial_assignment_operator;
@@ -211,10 +208,6 @@ struct __is_integer<signed char>{
 };
 template<>
 struct __is_integer<unsigned char>{
-    typedef __true_type is_integer;
-};
-template<>
-struct __is_integer<short>{
     typedef __true_type is_integer;
 };
 template<>
