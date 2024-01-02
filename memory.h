@@ -3,7 +3,6 @@
 
 #include "algobase.h"
 #include "allocator.h"
-#include "sgi_allocator.h"
 #include "uninitialized.h"
 #include "tempbuf.h"
 
