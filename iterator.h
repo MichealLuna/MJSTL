@@ -24,36 +24,36 @@ namespace ZMJ
 
     template <typename T>
     struct iterator_traits{
-        using iterator_category     = typename T::iterator_category;
-        using value_type            = typename T::value_type;
-        using difference_type       = typename T::difference_type;
-        using pointer               = typename T::pointer;
-        using reference             = typename T::reference;
+        using iterator_category     =  typename T::iterator_category;
+        using value_type            =  typename T::value_type;
+        using difference_type       =  typename T::difference_type;
+        using pointer               =  typename T::pointer;
+        using reference             =  typename T::reference;
     };
 
     template<typename T>
     struct iterator_traits<T*>{
-        using iterator_category     = typename ramdom_access_iterator_tag;
-        using value_type            = typename T;
-        using difference_type       = typename ptrdiff_t;
-        using pointer               = typename T*;
-        using reference             = typename T&;
+        using iterator_category     =  random_access_iterator_tag;
+        using value_type            =  T;
+        using difference_type       =  ptrdiff_t;
+        using pointer               =  T*;
+        using reference             =  T&;
     };
 
     template<typename T>
     struct iterator_traits<const T*>{
-        using iterator_category     = typename ramdom_access_iterator_tag;
-        using value_type            = typename T;
-        using difference_type       = typename ptrdiff_t;
-        using pointer               = typename const T*;
-        using reference             = typename const T&;
+        using iterator_category     =  random_access_iterator_tag;
+        using value_type            =  T;
+        using difference_type       =  ptrdiff_t;
+        using pointer               =  const T*;
+        using reference             =  const T&;
     };
 
     /*iterator_category*/
     template<typename Iterator>
     inline typename iterator_traits<Iterator>::iterator_category
     iterator_category(const Iterator&){
-        using category = iterator_traits<Iterator>::iterator_category;
+        using category = typename iterator_traits<Iterator>::iterator_category;
         return category();
     }
 
@@ -61,7 +61,7 @@ namespace ZMJ
     template<typename Iterator>
     inline typename iterator_traits<Iterator>::difference_type*
     distance_type(const Iterator&){
-        using difference_type = iterator_traits<Iterator>::difference_type;
+        using difference_type = typename iterator_traits<Iterator>::difference_type;
         return static_cast<typename iterator_traits<Iterator>::difference_type*>(0);
     }
 
@@ -69,7 +69,7 @@ namespace ZMJ
     template <typename Iterator>
     inline typename iterator_traits<Iterator>::value_type*
     value_type(const Iterator&){
-        using value_type = iterator_traits<Iterator>::value_type;
+        using value_type = typename iterator_traits<Iterator>::value_type;
         return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
     }
 
@@ -80,8 +80,6 @@ namespace ZMJ
     * 2、零成本抽象，空指针指针。
     * 3、不用产生实例化对象。
     */
-    
-
     template<typename InputIterator>
     inline typename iterator_traits<InputIterator>::difference_type
     distance(InputIterator first, InputIterator last){
@@ -92,7 +90,7 @@ namespace ZMJ
     template<typename InputIterator>
     inline typename iterator_traits<InputIterator>::difference_type
     __distance(InputIterator first, InputIterator last, input_iterator_tag){
-        iterator_traits<InputIterator>::difference_type n = 0;
+        typename iterator_traits<InputIterator>::difference_type n = 0;
         while(first != last){
             ++first;
             ++n;
