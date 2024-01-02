@@ -1,86 +1,82 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
-#include <new>          // for placement new
-#include <cstddef>      // for ptrdiff_t size_t
-#include <cstdlib>      // for exit
-#include <climits>      // for UINT_MAX
-#include <iostream>     // cerr
-
+#include "sgi_construct.h"
+#include "sgi_allocator.h"
 namespace ZMJ{
-
-template <class T>
-inline T* __allocate(ptrdiff_t size, T*){
-    std::set_new_handler(0);
-    T* tmp = (T*)(::operator new((size_t)(size * sizeof(T))));
-    if (tmp == 0) {
-        std::cerr << "out of memory" << std::endl;
-        exit(1);
-    }
-    return tmp;
-}
-
-template <class T>
-inline void __deallocate(T* buffer){
-    ::operator delete(buffer);
-}
-
-template <class T,class V>
-inline void __construct(T* p, const V& value){
-    new(p) T(value); 
-}
-
-template <class T>
-inline void __destroy(T* p){
-    p->~T();
-}
-
 template <class T>
 class allocator{
 public:
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
+    typedef  T          value_type;
+    typedef  T*         pointer;
+    typedef  const T*   const_pointer;
+    typedef  T&         reference;
+    typedef  const T&   const_reference;
+    typedef  size_t     size_type;
+    typedef  ptrdiff_t  difference_type;
 
+public:
     template <class U>
     struct rebind{
         using other = allocator<U>;
     };
 
-    //for memory
-    pointer allocate(size_type n, const void* hint = 0){
-        return __allocate((difference_type)n,(pointer)hint);
-    }
-    //for release memory
-    void deallocate(pointer p, size_type n){
-        __deallocate(p);
-    }
+public:
+    static T* allocate();
+    static T* allocate(size_t n);
+    static void deallocate(T* ptr);
+    static void deallocate(T* ptr,size_t n);
 
-    //for initalize memory
-    void construct(pointer p,const T& value){
-        __construct(p,value);
-    }
-    //for release resource in this type T.
-    void destory(pointer p){
-        __destroy(p);
-    }
-
-    pointer address(reference x){
-        return (pointer)&x;
-    }
-
-    const_pointer address(const_reference x){
-        return (const_pointer)(&x);
-    }
-
-    size_type max_size(){
-        return (size_type)(UINT_MAX / sizeof(T));
-    }
+    static void construct(T* ptr);
+    static void construct(T* ptr,const T& x);
+    static void destory(T* ptr);
+    static void destory(T* ptr,T* last);
 };
+
+
+template<class T>
+T* allocator<T>::allocate(){
+    return static_cast<T*>(alloc::allocate(sizeof(T)));
+}
+
+template<class T>
+T* allocator<T>::allocate(size_t n){
+    if(n == 0) return 0;
+    return static_cast<T*>(alloc::allocate(n * sizeof(T)));
+}
+
+template<class T>
+void allocator<T>::deallocate(T* ptr){
+    if(ptr == 0) return;
+    alloc::deallocate(ptr,sizeof(T));
+}
+
+template<class T>
+void allocator<T>::deallocate(T* ptr,size_t n){
+    if(ptr == 0) return;
+    alloc::deallocate(ptr,n * sizeof(T));
+}
+
+template<class T>
+void allocator<T>::construct(T* ptr){
+    ZMJ::construct(ptr);
+}
+
+template<class T>
+void allocator<T>::construct(T* ptr,const T& x){
+    ZMJ::construct(ptr,x);
+}
+
+template<class T>
+void allocator<T>::destory(T* ptr){
+    ZMJ::destory(ptr);
+}
+
+template<class T>
+void allocator<T>::destory(T* first,T* last){
+    ZMJ::destory(first,last);
+}
+
 
 }// namespace ZMJ
 #endif// !__ALLOCATOR_H__
