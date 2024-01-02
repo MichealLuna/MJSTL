@@ -3,13 +3,11 @@
 
 #include "iterator.h"
 #include "reverse_iterator.h"
-#include "sgi_allocator.h"
-#include "uninitialized.h"
-#include "algobase.h"
+#include "memory.h"
 
 namespace ZMJ{
 
-template <typename T,typename Alloc = simple_alloc<T>>
+template <typename T,typename Alloc = alloc>
 class vector{
 public:
     typedef T                                   value_type;
@@ -27,7 +25,7 @@ public:
     typedef reverse_iterator<const_iterator>    const_reverse_iterator;
     typedef reverse_iterator<iterator>          reverse_iterator;
 protected:
-    typedef Alloc                               data_allocator;
+    typedef ZMJ::allocator<T>             data_allocator;
 
 protected:
     iterator start;
@@ -157,7 +155,7 @@ protected:
 template<class T,class Alloc>
 template<class InputIterator>
 vector<T,Alloc>::vector(InputIterator first,InputIterator last){
-    typename __is_integer<InputIterator>::is_integer integer;
+    typedef typename __is_integer<InputIterator>::is_integer integer;
     __vector_construct(first,last,integer());
 }
 
@@ -169,8 +167,7 @@ void vector<T,Alloc>::__vector_construct(Integer n,Integer value,__true_type){
 
 template<class T,class Alloc>
 template<class InputIterator>
-void vector<T,Alloc>::__vector_construct(InputIterator first,
-    InputIterator last,__false_type){
+void vector<T,Alloc>::__vector_construct(InputIterator first,InputIterator last,__false_type){
     __allocate_and_copy(first,last);
 }
 
@@ -190,7 +187,7 @@ vector<T, Alloc>::vector(vector<T, Alloc>&& x) {
 template <class T, class Alloc>
 vector<T,Alloc>& vector<T,Alloc>::operator=(const vector<T,Alloc>& x){
     if(this != &x){
-        const auto len = rhs.size();
+        const auto len = x.size();
         /*要重分配空间*/
         if(len > capacity()){
             __destory_and_deallocate();
@@ -254,7 +251,7 @@ void vector<T,Alloc>::pop_back(){
 }
 
 template <class T, class Alloc>
-vector<T,Alloc>::iterator 
+typename vector<T,Alloc>::iterator 
 vector<T,Alloc>::erase(iterator position){
     if(position + 1 != end())
         copy(position+1,finish,position);
@@ -273,7 +270,7 @@ vector<T,Alloc>::erase(iterator position){
 }
 
 template <class T, class Alloc>
-vector<T,Alloc>::iterator 
+typename vector<T,Alloc>::iterator 
 vector<T,Alloc>::erase(iterator first,iterator last){
     iterator it = copy(last,finish,first);
     data_allocator::destory(it,finish);
@@ -579,7 +576,7 @@ inline bool operator<(vector<T,Alloc>& x,vector<T,Alloc>& y){
 }
 
 template<class T,class Alloc>
-inline bool operator==(vector<T,Alloc>& x,vector<T,Alloc>& y){
+inline bool operator!=(vector<T,Alloc>& x,vector<T,Alloc>& y){
     return !(x == y);
 }
 
