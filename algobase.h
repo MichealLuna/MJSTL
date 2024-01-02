@@ -13,23 +13,47 @@
 namespace ZMJ{
 
 /***********************************************copy***********************************************/
+/*__copy_d*/
+template<class RandomAccessIterator, class OutputIterator,class Distance>
+inline OutputIterator
+__copy_d(RandomAccessIterator first, RandomAccessIterator last,
+    OutputIterator result, Distance*){
+    for(Distance n = last - first; n > 0 ; --n, ++first, ++result)
+        *result = *first;
+    return result;
+}
 
+/*__copy_t: 指针所指对象具备trivial_assignment_operator*/
+template<class T>
+inline T* __copy_t(const T* first, const T* last, T* result, __true_type){
+    memmove(result,first,(size_t)(last - first)*sizeof(T));
+    return result + (last - first);
+}
+
+/*__copy_t: 指针所指对象具备non-trivial_assignment_operator*/
+template<class T>
+inline T* __copy_t(const T* first, const T* last, T* result, __false_type){
+    /*因为是指针类型，它其实random_access_iterator,所以初入一个原始指针，让编译器推导。*/
+    return __copy_d(first,last,result,(ptrdiff_t*)0);
+}
+/*__copy的InputIterator版本*/
 template<class InputIterator, class OutputIterator>
 inline OutputIterator
-copy(InputIterator first, InputIterator last, OutputIterator result){
-    return __copy_dispatch<InputIterator,OutputIterator>()(first,last,result);
+__copy(InputIterator first, InputIterator last, 
+    OutputIterator result,input_iterator_tag){
+    for(; first != last; ++first,++result)
+        *result = *first;
+    return result;
 }
 
-//const char* special version
-inline char* copy(const char* first, const char* last, char* result){
-    memmove(result,first,last-first);
-    return result + (last - first);
+/*__copy的Random_access_iterator版本*/
+template<class RandomAccessIterator, class OutputIterator>
+inline OutputIterator
+__copy(RandomAccessIterator first, RandomAccessIterator last, 
+    OutputIterator result,random_access_iterator_tag){
+    return __copy_d(first,last,result,distance_type(first));
 }
 
-inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result){
-    memmove(result,first,(last-first)*sizeof(wchar_t));
-    return result + (last - first);
-}
 
 /*泛化版本*/
 template <class InputIterator, class OutputIterator>
@@ -58,48 +82,25 @@ struct __copy_dispatch<const T*,T*>{
     }
 };
 
-/*__copy的InputIterator版本*/
+
+
+
 template<class InputIterator, class OutputIterator>
 inline OutputIterator
-__copy(InputIterator first, InputIterator last, 
-    OutputIterator result,input_iterator_tag){
-    for(; first != last; ++first,++result)
-        *result = *first;
-    return result;
+copy(InputIterator first, InputIterator last, OutputIterator result){
+    return __copy_dispatch<InputIterator,OutputIterator>()(first,last,result);
 }
 
-/*__copy的Random_access_iterator版本*/
-template<class RandomAccessIterator, class OutputIterator>
-inline OutputIterator
-__copy(RandomAccessIterator first, RandomAccessIterator last, 
-    OutputIterator result,random_access_iterator_tag){
-    return __copy_d(first,last,result,distance_type(first));
-}
-
-/*__copy_d*/
-template<class RandomAccessIterator, class OutputIterator,class Distance>
-inline OutputIterator
-__copy_d(RandomAccessIterator first, RandomAccessIterator last,
-    OutputIterator result, Distance*){
-    for(Distance n = last - first; n > 0 ; --n, ++first, ++result)
-        *result = *first;
-    return result;
-}
-
-/*__copy_t: 指针所指对象具备trivial_assignment_operator*/
-template<class T>
-inline T* __copy_t(const T* first, const T* last, T* result, __true_type){
-    memmove(first,last,(size_t)(last - first)*sizeof(T));
+//const char* special version
+inline char* copy(const char* first, const char* last, char* result){
+    memmove(result,first,last-first);
     return result + (last - first);
 }
 
-/*__copy_t: 指针所指对象具备non-trivial_assignment_operator*/
-template<class T>
-inline T* __copy_t(const T* first, const T* last, T* result, __false_type){
-    /*因为是指针类型，它其实random_access_iterator,所以初入一个原始指针，让编译器推导。*/
-    return __copy_d(first,last,result,(ptrdiff_t*)0);
+inline wchar_t* copy(const wchar_t* first, const wchar_t* last, wchar_t* result){
+    memmove(result,first,(last-first)*sizeof(wchar_t));
+    return result + (last - first);
 }
-
 
 /***********************************************copy_backward***********************************************/
 /*
@@ -107,14 +108,24 @@ inline T* __copy_t(const T* first, const T* last, T* result, __false_type){
 *   [first,last) 区间复制到 [result - (last - first),result);其中result是要复制到的地方的尾部，符合左闭右开。
 */
 
-template<class BidirectionalIterator1, class BidirectionalIterator2>
+/*__copy_backward: bidirectional_iterator */
+template<class BidirectionalIterator1,class BidirectionalIterator2,class Distance>
 inline BidirectionalIterator2
-copy_backward(BidirectionalIterator1 first,BidirectionalIterator1 last,
-    BidirectionalIterator2 result){
-    typedef typename iterator_traits<BidirectionalIterator1>::value_type value_type;
-    typedef typename __type_traits<value_type>::has_trivial_assignment_operator trivaial_assign;
-    return __copy_backward_dispatch<BidirectionalIterator1,BidirectionalIterator2,trivaial_assign()>::
-        copy(first,last,result);
+__copy_backward(BidirectionalIterator1 first,BidirectionalIterator1 last,
+    BidirectionalIterator2 result,bidirectional_iterator_tag,Distance*){
+    while(first != last)
+        *--result = *--last;
+    return result;
+}
+
+/*__copy_backward: random_access_iterator */
+template<class RandomAccessIterator1,class RandomAccessIterator2,class Distance>
+inline RandomAccessIterator2
+__copy_backward(RandomAccessIterator1 first,RandomAccessIterator1 last,
+    RandomAccessIterator2 result,random_access_iterator_tag,Distance*){
+    for(Distance n = last - first; n > 0; --n)
+        *--result = *--last;
+    return result;
 }
 
 /*__copy_backward_dispatch泛化*/
@@ -123,7 +134,7 @@ struct __copy_backward_dispatch{
     typedef typename iterator_traits<BidirectionalIterator1>::iterator_category category;
     typedef typename iterator_traits<BidirectionalIterator1>::difference_type distance;
 
-    static BidirectionIterator2 copy(BidirectionalIterator1 first,BidirectionalIterator1 last,
+    static BidirectionalIterator2 copy(BidirectionalIterator1 first,BidirectionalIterator1 last,
         BidirectionalIterator2 result){
         return __copy_backward(first,last,result,category(),(distance*)0);
     }
@@ -147,24 +158,14 @@ struct __copy_backward_dispatch<const T*,T*,__true_type>{
     }
 };
 
-/*__copy_backward: bidirectional_iterator */
-template<class BidirectionalIterator1,class BidirectionalIterator2,class Distance>
+template<class BidirectionalIterator1, class BidirectionalIterator2>
 inline BidirectionalIterator2
-__copy_backward(BidirectionalIterator1 first,BidirectionalIterator1 last,
-    BidirectionalIterator2 result,bidirectional_iterator_tag,Distance*){
-    while(first != last)
-        *--result = *--last;
-    return result;
-}
-
-/*__copy_backward: random_access_iterator */
-template<class RandomAccessIterator1,class RandomAccessIterator2,class Distance>
-inline RandomAccessIterator2
-__copy_backward(RandomAccessIterator1 first,RandomAccessIterator1 last,
-    RandomAccessIterator2 result,random_access_iterator_tag,Distance*){
-    for(Distance n = last - first; n > 0; --n)
-        *--result = *--last;
-    return result;
+copy_backward(BidirectionalIterator1 first,BidirectionalIterator1 last,
+    BidirectionalIterator2 result){
+    typedef typename iterator_traits<BidirectionalIterator1>::value_type value_type;
+    typedef typename __type_traits<value_type>::has_trivial_assignment_operator trivaial_assign;
+    return __copy_backward_dispatch<BidirectionalIterator1,BidirectionalIterator2,trivaial_assign()>::
+        copy(first,last,result);
 }
 
 /************************************************equal*************************************************/
@@ -222,9 +223,10 @@ void fill(ForwardIterator first,ForwardIterator last,const T& value){
 }
 
 template<class ForwardIterator,class Size,class T>
-void fill_n(ForwardIterator first,Size n, const T& value){
+ForwardIterator fill_n(ForwardIterator first,Size n, const T& value){
     for(;n > 0; --n,++first)
         *first = value;
+    return first;
 }
 
 void fill(unsigned char* first,unsigned char* last,unsigned char& value){
@@ -279,8 +281,7 @@ inline void swap(T& a,T& b){
 
 /*********************************lexicographical_compare****************************************/
 template<class InputIterator1,class InputIterator2>
-bool 
-lexicographical_compare(InputIterator1 first1,InputIterator1 last1,
+bool lexicographical_compare(InputIterator1 first1,InputIterator1 last1,
     InputIterator2 first2,InputIterator2 last2){
     for(;first1 != last1 && first2 != last2; ++first1, ++first2){
         if(*first1 < *first2)
@@ -292,8 +293,7 @@ lexicographical_compare(InputIterator1 first1,InputIterator1 last1,
 }
 
 template<class InputIterator1,class InputIterator2,class Compare>
-bool
-lexicographical_compare(InputIterator1 first1,InputIterator1 last1,
+bool lexicographical_compare(InputIterator1 first1,InputIterator1 last1,
     InputIterator2 first2,InputIterator2 last2,Compare comparator){
     for(;first1 != last1 && first2 != last2; ++first1, ++first2){
         if(comparator(*first1,*first2))
