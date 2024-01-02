@@ -15,9 +15,10 @@ void push_heap_aux(RandomAccessIterator first, Distance holeIndex, Distance topI
     Distance parent = (holeIndex-1)/2;
     /*大根堆： 从末尾往上调整*/
     while(holeIndex > topIndex && *(first+parent) < value){
+        /*把当前父节点位置小元素下放。不用担心最开始的holdeIndex位置元素被覆盖，因为有副本value在。*/
         *(first+holeIndex) = *(first+parent);
-        holeIndex = parent;
-        parent = (holeIndex-1)/2;
+        holeIndex = parent; /*上滤*/
+        parent = (holeIndex-1)/2;/*重新给定holeIndex的父节点。*/
     }
     *(first+holeIndex) = value;
 }
@@ -28,7 +29,7 @@ inline void push_heap_d(RandomAccessIterator first, RandomAccessIterator last, D
     push_head_aux(first,Distance(last-first - 1),Distance(0),*(last-1));
 }
 
-/*需要push的元素在容器顶*/
+/*需要push的元素已经在容器最尾端！*/
 template<class RandomAccessIterator>
 inline void push_heap(RandomAccessIterator first, RandomAccessIterator last){
     push_heap_d(first,last,distance_type(first));
@@ -67,6 +68,7 @@ template<class RandomAccessIterator, class T, class Distance>
 void adjust_heap(RandomAccessIterator first, Distance holeIndex,Distance len,T value){
     auto topIndex = holeIndex;
     auto rchild = 2 * holeIndex + 2;
+    /*这里递归地从holdeIndex的左右子节点中找到较大的一方成为父节点。*/
     while(rchild < len){
         if(*(first + rchild) < *(first + rchild - 1))
             --rchild;
@@ -76,7 +78,10 @@ void adjust_heap(RandomAccessIterator first, Distance holeIndex,Distance len,T v
     }
 
     if(rchild == len){
-        /*无右子节点，那么则一定右左子节点，因为这个holeIndex不会下到叶子节点*/
+        /*  rchild正好等于len，意味着无右子节点，那么则一定存在左子节点。
+        * 因为因为堆是一个满二叉树，如果rchild刚好不存在，那么rchild刚好
+        * 位于数组结尾标志位，那么right-1就一定就是左节点。
+        */
         *(first + holeIndex) = *(first + rchild - 1);
         holeIndex = rchild - 1;
     }
@@ -149,14 +154,13 @@ void make_heap_aux(RandomAccessIterator first, RandomAccessIterator last,Distanc
     if(last - first < 2)
         return;
     auto len = last - first;
-    auto holeIndex = (len-2)/2;
+    auto holeIndex = (len-2)/2;/*最后一个非叶子节点开始往堆顶调整元素，使之满足堆序性。*/
     while(true){
-        /*holeIndex是从最大的父节点开始，那么它在容器的区间就是[holeIndex,len)*/
+        /*调整容器区间[holeIndex,len)的堆序性，自底向上。*/
         adjust_heap(first,holeIndex,len,*(first+holeIndex));
         if(holeIndex == 0)
             return;
         holeIndex--;
-        /*这里holeIndex代表的是所有的非子节点，所以都要符合堆序性。*/
     }
 }
 
