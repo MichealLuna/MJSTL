@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include <new>
-#include <type_traits>
+#include "type_traits.h"
 
 #include "sgi_construct.h"
 
@@ -439,14 +439,14 @@ namespace ZMJ
 
 
 template<class T,class Alloc>
-simple_alloc<T,Alloc>::pointer 
+typename simple_alloc<T,Alloc>::pointer 
 simple_alloc<T,Alloc>::allocate(size_t n)
 {
     return 0 == n ? 0 : (T *)alloc::allocate(n * sizeof(T));
 }
 
 template<class T,class Alloc>
-simple_alloc<T,Alloc>::pointer 
+typename simple_alloc<T,Alloc>::pointer 
 simple_alloc<T,Alloc>::allocate()
 {
     return (T *)alloc::allocate(sizeof(T));
@@ -489,21 +489,21 @@ void simple_alloc<T,Alloc>::destroy(T* first,T* last){
 }
 
 template<class T,class Alloc>
-simple_alloc<T,Alloc>::pointer 
+typename simple_alloc<T,Alloc>::pointer 
 simple_alloc<T,Alloc>::address(reference x)
 {
     return (pointer)&x;
 }
 
 template<class T,class Alloc>
-simple_alloc<T,Alloc>::const_pointer 
+typename simple_alloc<T,Alloc>::const_pointer 
 simple_alloc<T,Alloc>::address(const_reference x)
 {
     return (const_pointer)&x;
 }
 
 template<class T,class Alloc>
-simple_alloc<T,Alloc>::size_type 
+typename simple_alloc<T,Alloc>::size_type 
 simple_alloc<T,Alloc>::max_size()
 {
     return size_type(UINT_MAX / sizeof(value_type));
