@@ -12,12 +12,12 @@ namespace ZMJ
 {
     template<class T>
     pair<T*,ptrdiff_t> get_temporary_buffer(ptrdiff_t len){
-        return __get_temporary_buffer(len,T*(0));
+        return __get_temporary_buffer(len,(T*)0);
     }
 
     template<class T>
     pair<T*,ptrdiff_t> get_temporary_buffer(ptrdiff_t len,T*){
-        return __get_temporary_buffer(len,T*(0));
+        return __get_temporary_buffer(len,(T*)0);
     }
 
     template<class T>
