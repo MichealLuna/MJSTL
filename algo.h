@@ -278,7 +278,7 @@ bool binary_search(ForwardIterator first,ForwardIterator last,
 template<class InputIterator,class T>
 typename iterator_traits<InputIterator>::difference_type
 count(InputIterator first,InputIterator last,const T& value){
-    typename itearator_traits<InputIterator>::difference_type ret = 0;
+    typename iterator_traits<InputIterator>::difference_type ret = 0;
     while(first != last){
         if(*first == value)
             ++ret;
@@ -361,11 +361,11 @@ __equal_range(RandomAccessIterator first,RandomAccessIterator last,const T& valu
         }else{/*找到了一个等于value的地方*/
             auto left = lower_bound(first,middle,value);/*这里又可以使用middle??*/
             auto right = upper_bound(++middle,first + len,value);
-            return pair<ForwardIterator,ForwardIterator>(left,right);
+            return pair<RandomAccessIterator,RandomAccessIterator>(left,right);
         }
     }
     /*没有value*/
-    return pair<ForwardIterator,ForwardIterator>(last,last);
+    return pair<RandomAccessIterator,RandomAccessIterator>(last,last);
 }
 
 template<class ForwardIterator,class T>
@@ -426,10 +426,10 @@ __equal_range(RandomAccessIterator first,RandomAccessIterator last,const T& valu
         }else{
             auto left = lower_bound(first,middle,value,comp);
             auto right = upper_bound(++middle,first + len,value,comp);
-            return pair<ForwardIterator,ForwardIterator>(left,right);
+            return pair<RandomAccessIterator,RandomAccessIterator>(left,right);
         }
     }
-    return pair<ForwardIterator,ForwardIterator>(last,last);
+    return pair<RandomAccessIterator,RandomAccessIterator>(last,last);
 }
 
 template<class ForwardIterator,class T,class Compare>
@@ -459,14 +459,6 @@ InputIterator find(InputIterator first,InputIterator last,Compare comp){
 /***********************************************find_end************************************************
 *  在区间[first1,last1)区间中查找[first2,last2)最后一次出现的地方，若不存在返回last1。
 ********************************************************************************************************/
-template<class ForwardIterator1,class ForwardIterator2>
-inline ForwardIterator1 find_end(ForwardIterator1 first1,ForwardIterator1 last1,
-    ForwardIterator2 first2,ForwardIterator2 last2){
-    typedef typename iterator_traits<ForwardIterator1>::iterator_category category1;
-    typedef typename iterator_traits<ForwardIterator2>::iterator_category category2;
-    return __find_end(first1,last1,first2,last2,category1(),category2());
-}
-
 template<class ForwardIterator1,class ForwardIterator2>
 ForwardIterator1 __find_end(ForwardIterator1 first1,ForwardIterator1 last1,
     ForwardIterator2 first2,ForwardIterator2 last2,
@@ -507,14 +499,15 @@ BidirectionalIterator1 __find_end(BidirectionalIterator1 first1,BidirectionalIte
     }
 }
 
-template<class ForwardIterator1,class ForwardIterator2,class Compare>
+template<class ForwardIterator1,class ForwardIterator2>
 inline ForwardIterator1 find_end(ForwardIterator1 first1,ForwardIterator1 last1,
-    ForwardIterator2 first2,ForwardIterator2 last2,Compare comp){
+    ForwardIterator2 first2,ForwardIterator2 last2){
     typedef typename iterator_traits<ForwardIterator1>::iterator_category category1;
     typedef typename iterator_traits<ForwardIterator2>::iterator_category category2;
-    return __find_end(first1,last1,first2,last2,category1(),category2(),comp);
+    return __find_end(first1,last1,first2,last2,category1(),category2());
 }
 
+/*comp版本*/
 template<class ForwardIterator1,class ForwardIterator2,class Compare>
 ForwardIterator1 __find_end(ForwardIterator1 first1,ForwardIterator1 last1,
     ForwardIterator2 first2,ForwardIterator2 last2,
@@ -553,6 +546,14 @@ BidirectionalIterator1 __find_end(BidirectionalIterator1 first1,BidirectionalIte
         advance(result,-(rlast2 - first2));/*逆匹配找到的是结尾，所以要减去长度，变回开头*/
         return result;
     }
+}
+
+template<class ForwardIterator1,class ForwardIterator2,class Compare>
+inline ForwardIterator1 find_end(ForwardIterator1 first1,ForwardIterator1 last1,
+    ForwardIterator2 first2,ForwardIterator2 last2,Compare comp){
+    typedef typename iterator_traits<ForwardIterator1>::iterator_category category1;
+    typedef typename iterator_traits<ForwardIterator2>::iterator_category category2;
+    return __find_end(first1,last1,first2,last2,category1(),category2(),comp);
 }
 
 /***********************************************find_first_of************************************************
@@ -759,7 +760,7 @@ bool next_permutation(BidirectionalIterator first,BidirectionalIterator last){
     for(;;){ 
         /* 
         *    if条件：旨在找到一个元素位置，这个位置元素小于后面位置的元素。
-        *  这个位置特殊，因为这个位置元素小于，只要把它后面比它大的元素交换，
+        *  这个位置特殊，因为这个位置元素小，只要跟它后面的元素进行交换，
         *  整个序列一定是变大的。
         *    iit从last-1往前，如果多次成立，那么[iit,last)将是递减序列。 
         */
@@ -779,7 +780,7 @@ bool next_permutation(BidirectionalIterator first,BidirectionalIterator last){
         }
 
         /*
-        *      迭代器it一直从last-1往前直到first，说明[first,last)是一个递减序列，
+        *      迭代器it一直从last-1往前直到first，说明[first,last)是一个非递增序列，
         *  也就是说序列最大元素在前面，依次往后都是小于等于前一个元素，这是一个最大
         *  序列，返回false。(这里实现时，最大序列会变成最小序列)
         */
@@ -873,7 +874,7 @@ __partial_sort_copy(InputIterator first,InputIterator last,
     make_heap(result_first,result_iter);
     for(;first != last; ++first){
         if(*first < *result_first)
-            adjust_heap(result_first,static_cast<Distance(0),
+            adjust_heap(result_first,static_cast<Distance>(0),
                 static_cast<Distance>(result_last - result_first),(T)(*first));
     }
     sort_heap(result_first,result_iter);
@@ -907,7 +908,7 @@ __partial_sort_copy(InputIterator first,InputIterator last,
     make_heap(result_first,result_iter,comp);
     for(;first != last; ++first){
         if(comp(*first,*result_first))
-            adjust_heap(result_first,static_cast<Distance(0),
+            adjust_heap(result_first,static_cast<Distance>(0),
                 static_cast<Distance>(result_last - result_first),(T)(*first),comp);
     }
     sort_heap(result_first,result_iter,comp);
@@ -1118,7 +1119,7 @@ void __reverse(RandomAccessIterator first,RandomAccessIterator last,random_acces
 }
 
 template<class RandomAccessIterator>
-void __reverse(RandomAccessIterator first,RandomAccessIterator last){
+void reverse(RandomAccessIterator first,RandomAccessIterator last){
     __reverse(first,last,iterator_category(first));
 }
 
@@ -1209,6 +1210,12 @@ void __rotate(RandomAccessIterator first,RandomAccessIterator middle,
         /*middle - first，偏移量，用来确定交换元素位置。*/
         __rotate_cycle(first,last,first+n,middle - first,value_type(first));
     }
+}
+
+template<class ForwardIterator>
+inline void rotate(ForwardIterator first,ForwardIterator middle,ForwardIterator last){
+    if(first == middle || last == middle) return;
+    __rotate(first,middle,last,distance_type(first),iterator_category(first));
 }
 
 /***********************************************rotate_copy************************************************
@@ -1468,19 +1475,25 @@ ForwardIterator unique(ForwardIterator first,ForwardIterator last,Compare comp){
 /***********************************************sort************************************************
  * 将区间[first,last)进行排序，默认以递增方式排序。
  * *************************************************************************************************/
-template<class RandomAccessIterator>
-inline void sort(RandomAccessIterator first,RandomAccessIterator last){
-    if(first == last) return;
-    __introsort_loop(first,last,value_type(first),__lg(last - first) * 2);
-    __final_insertion_sort(first,last);
-}
-
 /*控制分割恶化的情况。*/
 template<class Size>
 inline Size __lg(Size n){ /*得到使得 2^result <= n 时，result的最大值。*/
     Size result;
     for(result = 0; n > 1 ; n >> 1) ++result;
     return result;
+}
+
+template<class RandomAccessIterator,class T>
+RandomAccessIterator 
+__unguarded_partition(RandomAccessIterator first,RandomAccessIterator last,T pivot){
+    while(true){
+        while(*first < pivot) ++first; /*找到第一个大于pivot的元素*/
+        --last;
+        while(*pivot < *last) --last; /*从右往左找到第一个小于last的元素。*/
+        if(!(first < last)) return first; /*交错，循环结束。*/
+        iter_swap(first,last); /*交换两个位置。*/
+        ++first;
+    }
 }
 
 const int __SECTIONSIZE = 16;
@@ -1510,16 +1523,46 @@ void __introsort_loop(RandomAccessIterator first,RandomAccessIterator last,
 }
 
 template<class RandomAccessIterator,class T>
-RandomAccessIterator 
-__unguarded_partition(RandomAccessIterator first,RandomAccessIterator last,T pivot){
-    while(true){
-        while(*first < pivot) ++first; /*找到第一个大于pivot的元素*/
-        --last;
-        while(*pivot < *last) --last; /*从右往左找到第一个小于last的元素。*/
-        if(!(first < last)) return first; /*交错，循环结束。*/
-        iter_swap(first,last); /*交换两个位置。*/
-        ++first;
+void __unguarded_linear_insert(RandomAccessIterator last,T value){
+    RandomAccessIterator next = last;
+    --next;
+    while(value < *next){
+        *last = *next;
+        last = next;
+        --next;
     }
+    *last = value;
+}
+
+template<class RandomAccessIterator,class T>
+inline void __linear_insert(RandomAccessIterator first,RandomAccessIterator last,T*){
+    T value = *last;
+    if(value < *first){
+        copy_backward(first,last,last+1);
+        *first = value;
+    }else  /*前一个if条件不成立，保证了value一定不是第一个元素，那么下面这个函数可以调用。*/
+        __unguarded_linear_insert(last,value);
+}
+
+/*插入排序*/
+template<class RandomAccessIterator>
+void __insertion_sort(RandomAccessIterator first,RandomAccessIterator last){
+    if(first == last) return ;
+    for(RandomAccessIterator it = first + 1; it != last; ++it)
+        __linear_insert(first,it,value_type(first));/*对子区间[first,it)插入元素。*/
+}
+
+template<class RandomAccessIterator,class T>
+void __unguarded_insertion_sort_aux(RandomAccessIterator first,
+    RandomAccessIterator last,T*){
+    for(RandomAccessIterator it = first; it != last; ++it)
+        __unguarded_linear_insert(it,T(*it));
+}
+
+template<class RandomAccessIterator>
+inline void 
+__unguarded_insertion_sort(RandomAccessIterator first,RandomAccessIterator last){
+    __unguarded_insertion_sort_aux(first,last,value_type(first));
 }
 
 template<class RandomAccessIterator>
@@ -1533,56 +1576,26 @@ void __final_insertion_sort(RandomAccessIterator first,RandomAccessIterator last
         __insertion_sort(first,last);
 }
 
-/*插入排序*/
 template<class RandomAccessIterator>
-void __insertion_sort(RandomAccessIterator first,RandomAccessIterator last){
-    if(first == last) return ;
-    for(RandomAccessIterator it = first + 1; it != last; ++it)
-        __linear_insert(first,it,value_type(first));/*对子区间[first,it)插入元素。*/
-}
-
-template<class RandomAccessIterator,class T>
-inline void __linear_insert(RandomAccessIterator first,RandomAccessIterator last,T*){
-    T value = *last;
-    if(value < *first){
-        copy_backward(first,last,last+1);
-        *first = value;
-    }else  /*前一个if条件不成立，保证了value一定不是第一个元素，那么下面这个函数可以调用。*/
-        __unguarded_linear_insert(last,value);
-}
-
-template<class RandomAccessIterator,class T>
-void __unguarded_linear_insert(RandomAccessIterator last,T value){
-    RandomAccessIterator next = last;
-    --next;
-    while(value < *next){
-        *last = *next;
-        last = next;
-        --next;
-    }
-    *last = value;
-}
-
-
-template<class RandomAccessIterator>
-inline void 
-__unguarded_insertion_sort(RandomAccessIterator first,RandomAccessIterator last){
-    __unguarded_insertion_sort_aux(first,last,value_type(first));
-}
-
-template<class RandomAccessIterator,class T>
-void __unguarded_insertion_sort_aux(RandomAccessIterator first,
-    RandomAccessIterator last,T*){
-    for(RandomAccessIterator it = first; it != last; ++it)
-        __unguarded_linear_insert(it,T(*it));
+inline void sort(RandomAccessIterator first,RandomAccessIterator last){
+    if(first == last) return;
+    __introsort_loop(first,last,value_type(first),__lg(last - first) * 2);
+    __final_insertion_sort(first,last);
 }
 
 /*使用仿函数comp版本。*/
-template<class RandomAccessIterator,class Compare>
-inline void sort(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
-    if(first == last) return;
-    __introsort_loop(first,last,value_type(first),__lg(last - first) * 2,comp);
-    __final_insertion_sort(first,last,comp);
+template<class RandomAccessIterator,class T,class Compare>
+RandomAccessIterator 
+__unguarded_partition(RandomAccessIterator first,RandomAccessIterator last,
+    T pivot,Compare comp){
+    while(true){
+        while(comp(*first,pivot)) ++first; /*找到第一个大于pivot的元素*/
+        --last;
+        while(comp(*pivot,*last)) --last; /*从右往左找到第一个小于last的元素。*/
+        if(!(first < last)) return first; /*交错，循环结束。*/
+        iter_swap(first,last); /*交换两个位置。*/
+        ++first;
+    }
 }
 
 /*内省式排序，先进行quick_sort,当分割行为出现恶化倾向时，改用heap_sort。*/
@@ -1604,36 +1617,15 @@ void __introsort_loop(RandomAccessIterator first,RandomAccessIterator last,
 }
 
 template<class RandomAccessIterator,class T,class Compare>
-RandomAccessIterator 
-__unguarded_partition(RandomAccessIterator first,RandomAccessIterator last,
-    T pivot,Compare comp){
-    while(true){
-        while(comp(*first,pivot)) ++first; /*找到第一个大于pivot的元素*/
-        --last;
-        while(comp(*pivot,*last)) --last; /*从右往左找到第一个小于last的元素。*/
-        if(!(first < last)) return first; /*交错，循环结束。*/
-        iter_swap(first,last); /*交换两个位置。*/
-        ++first;
+void __unguarded_linear_insert(RandomAccessIterator last,T value,Compare comp){
+    RandomAccessIterator next = last;
+    --next;
+    while(comp(value,*next)){
+        *last = *next;
+        last = next;
+        --next;
     }
-}
-
-template<class RandomAccessIterator,class Compare>
-void __final_insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last,Compare comp){
-    if(last - first > __SECTIONSIZE){ /*大于__SECTIONSIZE前部分用插入排序*/
-        __insertion_sort(first,first + __SECTIONSIZE,comp);
-        __unguarded_insertion_sort(first + __SECTIONSIZE,last,comp);
-    }else/*小于__SECTIONSIZE直接使用插入排序。*/
-        __insertion_sort(first,last,comp);
-}
-
-/*插入排序*/
-template<class RandomAccessIterator,class Compare>
-void __insertion_sort(RandomAccessIterator first,
-    RandomAccessIterator last,Compare comp){
-    if(first == last) return ;
-    for(RandomAccessIterator it = first + 1; it != last; ++it)
-        __linear_insert(first,it,value_type(first),comp);/*对子区间[first,it)插入元素。*/
+    *last = value;
 }
 
 template<class RandomAccessIterator,class T,class Compare>
@@ -1647,23 +1639,13 @@ inline void __linear_insert(RandomAccessIterator first,
         __unguarded_linear_insert(last,value,comp);
 }
 
-template<class RandomAccessIterator,class T,class Compare>
-void __unguarded_linear_insert(RandomAccessIterator last,T value,Compare comp){
-    RandomAccessIterator next = last;
-    --next;
-    while(comp(value,*next)){
-        *last = *next;
-        last = next;
-        --next;
-    }
-    *last = value;
-}
-
-
+/*插入排序*/
 template<class RandomAccessIterator,class Compare>
-inline void 
-__unguarded_insertion_sort(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
-    __unguarded_insertion_sort_aux(first,last,value_type(first),comp);
+void __insertion_sort(RandomAccessIterator first,
+    RandomAccessIterator last,Compare comp){
+    if(first == last) return ;
+    for(RandomAccessIterator it = first + 1; it != last; ++it)
+        __linear_insert(first,it,value_type(first),comp);/*对子区间[first,it)插入元素。*/
 }
 
 template<class RandomAccessIterator,class T,class Compare>
@@ -1671,6 +1653,29 @@ void __unguarded_insertion_sort_aux(RandomAccessIterator first,
     RandomAccessIterator last,T*,Compare comp){
     for(RandomAccessIterator it = first; it != last; ++it)
         __unguarded_linear_insert(it,T(*it),comp);
+}
+
+template<class RandomAccessIterator,class Compare>
+inline void 
+__unguarded_insertion_sort(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
+    __unguarded_insertion_sort_aux(first,last,value_type(first),comp);
+}
+
+template<class RandomAccessIterator,class Compare>
+void __final_insertion_sort(RandomAccessIterator first,
+    RandomAccessIterator last,Compare comp){
+    if(last - first > __SECTIONSIZE){ /*大于__SECTIONSIZE前部分用插入排序*/
+        __insertion_sort(first,first + __SECTIONSIZE,comp);
+        __unguarded_insertion_sort(first + __SECTIONSIZE,last,comp);
+    }else/*小于__SECTIONSIZE直接使用插入排序。*/
+        __insertion_sort(first,last,comp);
+}
+
+template<class RandomAccessIterator,class Compare>
+inline void sort(RandomAccessIterator first,RandomAccessIterator last,Compare comp){
+    if(first == last) return;
+    __introsort_loop(first,last,value_type(first),__lg(last - first) * 2,comp);
+    __final_insertion_sort(first,last,comp);
 }
 
 /***********************************************nth_element************************************************
