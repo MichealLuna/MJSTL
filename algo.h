@@ -1681,12 +1681,6 @@ inline void sort(RandomAccessIterator first,RandomAccessIterator last,Compare co
 /***********************************************nth_element************************************************
  * 对序列进行重排，使得所有小于第n个元素出现在它的前面，大于它的出现在它的后面。
  **********************************************************************************************************/
-template<class RandomAccessIterator>
-inline void nth_element(RandomAccessIterator first,RandomAccessIterator nth,
-    RandomAccessIterator last){
-    __nth_element(first,nth,last,value_type(first));
-}
-
 template<class RandomAccessIterator,class T>
 inline void __nth_element(RandomAccessIterator first,RandomAccessIterator nth,
     RandomAccessIterator last,T*){
@@ -1706,10 +1700,10 @@ inline void __nth_element(RandomAccessIterator first,RandomAccessIterator nth,
     __insertion_sort(first,last);
 }
 
-template<class RandomAccessIterator,class Compare>
+template<class RandomAccessIterator>
 inline void nth_element(RandomAccessIterator first,RandomAccessIterator nth,
-    RandomAccessIterator last,Compare comp){
-    __nth_element(first,nth,last,value_type(first),comp);
+    RandomAccessIterator last){
+    __nth_element(first,nth,last,value_type(first));
 }
 
 template<class RandomAccessIterator,class T,class Compare>
@@ -1731,14 +1725,15 @@ inline void __nth_element(RandomAccessIterator first,RandomAccessIterator nth,
     __insertion_sort(first,last,comp);
 }
 
+template<class RandomAccessIterator,class Compare>
+inline void nth_element(RandomAccessIterator first,RandomAccessIterator nth,
+    RandomAccessIterator last,Compare comp){
+    __nth_element(first,nth,last,value_type(first),comp);
+}
+
 /***********************************************random_shuffle***********************************************
  * 将[first,last)内的元素随机重排。
  ************************************************************************************************************/
-template<class RandomAccessIterator>
-inline void random_shuffle(RandomAccessIterator first,RandomAccessIterator last){
-    __random_shuffle(first,last,distance_type(first));
-}
-
 template<class RandomAccessIterator,class Distance>
 void __random_shuffle(RandomAccessIterator first,RandomAccessIterator last,Distance*){
     if(first == last) return ;
@@ -1746,6 +1741,11 @@ void __random_shuffle(RandomAccessIterator first,RandomAccessIterator last,Dista
     /*将当前it位置元素跟[first,it]的任意元素进行交换。*/
     for(RandomAccessIterator it = first + 1; it != last; ++it)
         iter_swap(it,first+Distance(rand() % ((it -first) + 1)));
+}
+
+template<class RandomAccessIterator>
+inline void random_shuffle(RandomAccessIterator first,RandomAccessIterator last){
+    __random_shuffle(first,last,distance_type(first));
 }
 
 template<class RandomAccessIterator,class RandomNumberGenerator>
