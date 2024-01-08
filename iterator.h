@@ -5,7 +5,7 @@
 #define USE_CSTDDEF
 #include <cstddef>
 #endif // !USE_CSTDDEF
-namespace ZMJ
+namespace mjstl
 {
     struct input_iterator_tag{};
     struct output_iterator_tag{};
@@ -137,5 +137,5 @@ namespace ZMJ
         i += n;
     }
 
-} // namespace ZMJ
+} // namespace mjstl
 #endif// !__ITERATOR_H__

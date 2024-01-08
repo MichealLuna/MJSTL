@@ -5,7 +5,7 @@
 #include "reverse_iterator.h"
 #include "memory.h"
 
-namespace ZMJ{
+namespace mjstl{
 
 template <typename T,typename Alloc = alloc>
 class vector{
@@ -25,7 +25,7 @@ public:
     typedef reverse_iterator<const_iterator>    const_reverse_iterator;
     typedef reverse_iterator<iterator>          reverse_iterator;
 protected:
-    typedef ZMJ::allocator<T>             data_allocator;
+    typedef mjstl::allocator<T>             data_allocator;
 
 protected:
     iterator start;
@@ -194,10 +194,10 @@ vector<T,Alloc>& vector<T,Alloc>::operator=(const vector<T,Alloc>& x){
             __allocate_and_copy(x.begin(),x.end());
         }else if(size() >= len){/*不用重新分配空间*/
             iterator it = copy(x.begin(),x.end(),start);
-            ZMJ::destory(it,finish);
+            mjstl::destory(it,finish);
         }else{/*不用重新分配空间，但需要扩充finish。*/
             copy(x.begin(),x.begin() + size(),start);
-            ZMJ::uninitialized_copy(x.begin() + size(),x.end(),finish);
+            mjstl::uninitialized_copy(x.begin() + size(),x.end(),finish);
         }
         finish = start + len;
     }
@@ -280,9 +280,9 @@ vector<T,Alloc>::erase(iterator first,iterator last){
 
 template <class T, class Alloc>
 void vector<T,Alloc>::swap(vector<T,Alloc>& rhs){
-    ZMJ::swap(start,rhs.start);
-    ZMJ::swap(finish,rhs.finish);
-    ZMJ::swap(end_of_storage,rhs.end_of_storage);
+    mjstl::swap(start,rhs.start);
+    mjstl::swap(finish,rhs.finish);
+    mjstl::swap(end_of_storage,rhs.end_of_storage);
 }
 
 template <class T, class Alloc>
@@ -384,7 +384,7 @@ void vector<T, Alloc>::__fill_insert(iterator position, size_type n,const T& x){
         }
     }else{
         size_type old_size = size();
-        size_type new_size = old_size + ZMJ::max(old_size,n);
+        size_type new_size = old_size + mjstl::max(old_size,n);
 
         iterator new_start = data_allocator::allocate(new_size);
         iterator new_finish = new_start;
@@ -542,7 +542,7 @@ void vector<T,Alloc>::__range_insert(iterator position,ForwardIterator first,
             }
         }else{
             const size_type old_size = size();
-            const size_type new_size = old_size + ZMJ::max(old_size,n);
+            const size_type new_size = old_size + mjstl::max(old_size,n);
 
             iterator new_start = data_allocator::allocate(new_size);
             iterator new_finish = new_start;

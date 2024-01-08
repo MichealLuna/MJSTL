@@ -5,7 +5,7 @@
 #include "reverse_iterator.h"
 #include "memory.h"
 
-namespace ZMJ
+namespace mjstl
 {
     /*
     *   决定缓冲区大小：
@@ -295,5 +295,5 @@ namespace ZMJ
         void __reverse_map_at_front(size_type n);
         void __reallocate_map(size_type node_to_add,bool add_at_front);
     };
-} // namespace ZMJ
+} // namespace mjstl
 #endif// !__DEQUE_H__

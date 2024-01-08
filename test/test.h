@@ -11,7 +11,7 @@
 
 #include "color.h"
 
-namespace ZMJ
+namespace mjstl
 {
 namespace test
 {
@@ -123,7 +123,7 @@ void UnitTest::Run()
     testcase_name##_TEST
 
 /*仅仅通过一个测试名称，使用测试名称就地继承和实现TestCase基类。*/
-#define ZMJSTL_TEST(testcase_name)                              \
+#define MJSTL_TEST(testcase_name)                               \
 class TESTCASE_NAME(testcase_name) : public TestCase{           \
 public:                                                         \
     TTESTCASE_NAME(testcase_name)(const char* case_name):       \
@@ -502,6 +502,14 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
 #define TEST_LEN(len1, len2, len3, wide) \
   test_len(len1, len2, len3, wide)
 
+/*
+*   std::setw(..),给接下来的输出设置了固定宽度，如果超过宽度，
+* 超出部分会截断，如果小于固定宽度，会视情况填充空格。
+*
+*  以下mode参数：其实是不同版本的容器，例如std的容器，自创建容器mjstl。
+*     count参数：测试次数。
+*/
+
 // 常用测试性能的宏
 #define FUN_TEST_FORMAT1(mode, fun, arg, count) do {         \
   srand((int)time(0));                                       \
@@ -579,10 +587,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
   FUN_TEST_FORMAT1(std::con, fun, arg, len1);                \
   FUN_TEST_FORMAT1(std::con, fun, arg, len2);                \
   FUN_TEST_FORMAT1(std::con, fun, arg, len3);                \
-  std::cout << "\n|        mystl        |";                  \
-  FUN_TEST_FORMAT1(mystl::con, fun, arg, len1);              \
-  FUN_TEST_FORMAT1(mystl::con, fun, arg, len2);              \
-  FUN_TEST_FORMAT1(mystl::con, fun, arg, len3);    
+  std::cout << "\n|        mjstl        |";                  \
+  FUN_TEST_FORMAT1(mjstl::con, fun, arg, len1);              \
+  FUN_TEST_FORMAT1(mjstl::con, fun, arg, len2);              \
+  FUN_TEST_FORMAT1(mjstl::con, fun, arg, len3);    
 
 #define CON_TEST_P2(con, fun, arg1, arg2, len1, len2, len3)  \
   TEST_LEN(len1, len2, len3, WIDE);                          \
@@ -590,10 +598,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
   FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len1);         \
   FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len2);         \
   FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len3);         \
-  std::cout << "\n|        mystl        |";                  \
-  FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len1);       \
-  FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len2);       \
-  FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len3);    
+  std::cout << "\n|        mjstl        |";                  \
+  FUN_TEST_FORMAT2(mjstl::con, fun, arg1, arg2, len1);       \
+  FUN_TEST_FORMAT2(mjstl::con, fun, arg1, arg2, len2);       \
+  FUN_TEST_FORMAT2(mjstl::con, fun, arg1, arg2, len3);    
 
 #define MAP_EMPLACE_TEST(con, len1, len2, len3)              \
   TEST_LEN(len1, len2, len3, WIDE);                          \
@@ -601,10 +609,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
   MAP_EMPLACE_DO_TEST(std, con, len1);                       \
   MAP_EMPLACE_DO_TEST(std, con, len2);                       \
   MAP_EMPLACE_DO_TEST(std, con, len3);                       \
-  std::cout << "\n|        mystl        |";                  \
-  MAP_EMPLACE_DO_TEST(mystl, con, len1);                     \
-  MAP_EMPLACE_DO_TEST(mystl, con, len2);                     \
-  MAP_EMPLACE_DO_TEST(mystl, con, len3);
+  std::cout << "\n|        mjstl        |";                  \
+  MAP_EMPLACE_DO_TEST(mjstl, con, len1);                     \
+  MAP_EMPLACE_DO_TEST(mjstl, con, len2);                     \
+  MAP_EMPLACE_DO_TEST(mjstl, con, len3);
 
 #define LIST_SORT_TEST(len1, len2, len3)                     \
   TEST_LEN(len1, len2, len3, WIDE);                          \
@@ -612,18 +620,18 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
   LIST_SORT_DO_TEST(std, len1);                              \
   LIST_SORT_DO_TEST(std, len2);                              \
   LIST_SORT_DO_TEST(std, len3);                              \
-  std::cout << "\n|        mystl        |";                  \
-  LIST_SORT_DO_TEST(mystl, len1);                            \
-  LIST_SORT_DO_TEST(mystl, len2);                            \
-  LIST_SORT_DO_TEST(mystl, len3);
+  std::cout << "\n|        mjstl        |";                  \
+  LIST_SORT_DO_TEST(mjstl, len1);                            \
+  LIST_SORT_DO_TEST(mjstl, len2);                            \
+  LIST_SORT_DO_TEST(mjstl, len3);
 
 // 简单测试的宏定义
 #define TEST(testcase_name) \
-  MYTINYSTL_TEST_(testcase_name)
+  MJSTL_TEST(testcase_name)
 
 // 运行所有测试案例
 #define RUN_ALL_TESTS() \
-  mystl::test::UnitTest::GetInstance()->Run()
+  mjstl::test::UnitTest::GetInstance()->Run()
 
 // 是否开启性能测试
 #ifndef PERFORMANCE_TEST_ON

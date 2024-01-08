@@ -1,7 +1,7 @@
 #ifndef __PAIR_H__
 #define __PAIR_H__
 
-namespace ZMJ{
+namespace mjstl{
 
 template<class T1, class T2>
 struct pair{

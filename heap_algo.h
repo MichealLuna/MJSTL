@@ -2,7 +2,7 @@
 #define __HEAP_ALGO_H__
 
 #include "iterator.h"
-namespace ZMJ{
+namespace mjstl{
 
 /* heap算法： push_heap , pop_heap , sort_heap , make_heap */
 /*使用array，vector容器作为heap的容器。*/
@@ -188,6 +188,6 @@ void make_heap(RandomAccessIterator first, RandomAccessIterator last,Compare com
     make_heap_aux(first,last,distance_type(first),comp);
 }
 
-}//namespace ZMJ
+}//namespace mjstl
 
 #endif//__HEAP_ALGO_H__

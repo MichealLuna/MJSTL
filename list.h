@@ -5,7 +5,7 @@
 #include "reverse_iterator.h"
 #include "memory.h"
 
-namespace ZMJ
+namespace mjstl
 {
     /*list node*/
     template<class T>
@@ -148,7 +148,7 @@ namespace ZMJ
         void pop_back(){ auto tmp = end(); erase(--tmp);}
         void resize(size_type new_size,const T& x);
         void resize(size_type new_size){ return resize(new_size,T());}
-        void swap(list& x){ ZMJ::swap(node,x.node);}
+        void swap(list& x){ mjstl::swap(node,x.node);}
 
         /*container operation*/
         void splice(iterator position,list& x);
@@ -466,7 +466,7 @@ list<T,Alloc>::__create_node(const T& x){
 
 template<class T,class Alloc>
 void list<T,Alloc>::__destory_node(link_type p){
-    ZMJ::destory(&p->data);
+    mjstl::destory(&p->data);
     data_allocate::deallocate(p);
 }
 
@@ -554,7 +554,7 @@ inline bool operator==(const list<T,Alloc>& x,const list<T,Alloc>& y){
 
 template<class T,class Alloc>
 inline bool operator<(const list<T,Alloc>& x,const list<T,Alloc>& y){
-    return ZMJ::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
+    return mjstl::lexicographical_compare(x.begin(),x.end(),y.begin(),y.end());
 }
 
 template<class T,class Alloc>
@@ -576,5 +576,5 @@ template<class T,class Alloc>
 inline void swap(const list<T,Alloc>& x,const list<T,Alloc>& y){
     x.swap(y);
 }
-} // namespace ZMJ
+} // namespace mjstl
 #endif// !__LIST_H__

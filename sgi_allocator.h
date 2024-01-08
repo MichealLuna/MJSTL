@@ -19,7 +19,7 @@
     exit(1);
 #endif
 
-namespace ZMJ
+namespace mjstl
 {
 
     /*
@@ -468,24 +468,24 @@ void simple_alloc<T,Alloc>::deallocate(T *p)
 
 template<class T,class Alloc>
 void simple_alloc<T,Alloc>::construct(T* ptr){
-    ZMJ::construct(ptr);
+    mjstl::construct(ptr);
 }
 
 template<class T,class Alloc>
 void simple_alloc<T,Alloc>::construct(T *p, const T &val)
 {
-    ZMJ::construct(p, val);
+    mjstl::construct(p, val);
 }
 
 template<class T,class Alloc>
 void simple_alloc<T,Alloc>::destroy(T *p)
 {
-    ZMJ::destory(p);
+    mjstl::destory(p);
 }
 
 template<class T,class Alloc>
 void simple_alloc<T,Alloc>::destroy(T* first,T* last){
-    ZMJ::destory(first,last);
+    mjstl::destory(first,last);
 }
 
 template<class T,class Alloc>

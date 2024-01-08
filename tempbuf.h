@@ -8,7 +8,7 @@
 
 #include "type_traits.h"
 #include "uninitialized.h"
-namespace ZMJ
+namespace mjstl
 {
     template<class T>
     pair<T*,ptrdiff_t> get_temporary_buffer(ptrdiff_t len){

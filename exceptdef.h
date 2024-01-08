@@ -4,7 +4,7 @@
 #include<stdexcept>
 #include<cassert>
 
-namespace ZMJ
+namespace mjstl
 {
 
 #define ZMJ_DEBUG(expr) \
@@ -19,5 +19,5 @@ namespace ZMJ
 #define THROW_RUNTIME_ERROR_IF(expr,what) \
     if((expr)) throw std::runtime_error(what)
 
-} // namespace ZMJ
+} // namespace mjstl
 #endif// !__EXCEPTDEF_H__

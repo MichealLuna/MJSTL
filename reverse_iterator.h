@@ -1,7 +1,7 @@
 #ifndef __REVERSE_ITERATOR_H__
 #define __REVERSE_ITERATOR_H__
 
-namespace ZMJ{
+namespace mjstl{
 
 template<class Iterator>
 class reverse_iterator{

@@ -29,12 +29,12 @@ struct BigBlock{
 int main(){
     //for vector
     int v[] = {1,3,4,13203,2302,23,34,3,53,23,23};
-    std::vector<int,ZMJ::simple_alloc<int>> vec(v,v+sizeof(v)/sizeof(int));
+    std::vector<int,mjstl::simple_alloc<int>> vec(v,v+sizeof(v)/sizeof(int));
     std::for_each(vec.begin(),vec.end(),[](int i){ cout<<i<<" "; });
     std::cout<<std::endl;
 
     //for map
-    std::map<std::string,int,std::less<std::string>,ZMJ::simple_alloc<std::pair<const std::string,int>>> mp;
+    std::map<std::string,int,std::less<std::string>,mjstl::simple_alloc<std::pair<const std::string,int>>> mp;
     std::string base = "HUTAO";
     mp.insert({"ZMJ",23});
     for(int i = 0; i < 1000; ++i){
@@ -45,7 +45,7 @@ int main(){
     std::for_each(mp.begin(),mp.end(),[](std::pair<std::string,int> i){ cout<<i.first<<" "<<i.second<<"\n"; });
 
     //for unordered_map : 这里还要给simple_alloc提供一个拷贝构造！simple_alloc(const simple_alloc<U>& other);
-    std::unordered_map<std::string,int,hash<std::string>,equal_to<std::string>,ZMJ::simple_alloc<std::pair<const std::string,int>>> umap;
+    std::unordered_map<std::string,int,hash<std::string>,equal_to<std::string>,mjstl::simple_alloc<std::pair<const std::string,int>>> umap;
     for(int i = 0; i < 1000; ++i){
         char buf[20] = {0};
         std::string tmp = base + itoa(i,buf,10);
@@ -54,23 +54,23 @@ int main(){
     std::for_each(umap.begin(),umap.end(),[](std::pair<std::string,int> i){ cout<<i.first<<" "<<i.second<<"\n"; });
 
     //for list
-    std::list<std::string,ZMJ::simple_alloc<std::string>> lt;
+    std::list<std::string,mjstl::simple_alloc<std::string>> lt;
     for(int i = 0; i < 1000; ++i){
         lt.push_back("YOLA");
     }
     std::for_each(lt.begin(),lt.end(),[](std::string& i){ cout<<i<<"\n"; });
 
     //for dequeue
-    std::deque<std::string,ZMJ::simple_alloc<std::string>> dt;
+    std::deque<std::string,mjstl::simple_alloc<std::string>> dt;
     for(int i = 0; i < 1000; ++i){
         dt.push_back("RaidenEi");
     }
     std::for_each(dt.begin(),dt.end(),[](std::string& i){ cout<<i<<"\n"; });
 
     //for big memory allocate.
-    BigBlock* big = ZMJ::simple_alloc<BigBlock>().allocate(2);
+    BigBlock* big = mjstl::simple_alloc<BigBlock>().allocate(2);
     big->set(628);
-    ZMJ::simple_alloc<BigBlock>().deallocate(big,2);
+    mjstl::simple_alloc<BigBlock>().deallocate(big,2);
 
     return 0;
 }

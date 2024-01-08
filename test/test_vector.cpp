@@ -2,7 +2,7 @@
 #include "algo.h"
 #include <iostream>
 
-using namespace ZMJ;
+using namespace mjstl;
 
 int main(){
     vector<int> nums(10,2);

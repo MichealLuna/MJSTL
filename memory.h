@@ -6,7 +6,7 @@
 #include "uninitialized.h"
 #include "tempbuf.h"
 
-namespace ZMJ
+namespace mjstl
 {
     template<class T>
     class auto_ptr{
@@ -71,5 +71,5 @@ namespace ZMJ
             }
         }
     };
-} // namespace ZMJ
+} // namespace mjstl
 #endif//!__MEMORY_H__

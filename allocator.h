@@ -3,7 +3,7 @@
 
 #include "sgi_construct.h"
 #include "sgi_allocator.h"
-namespace ZMJ{
+namespace mjstl{
 template <class T>
 class allocator{
 public:
@@ -59,24 +59,24 @@ void allocator<T>::deallocate(T* ptr,size_t n){
 
 template<class T>
 void allocator<T>::construct(T* ptr){
-    ZMJ::construct(ptr);
+    mjstl::construct(ptr);
 }
 
 template<class T>
 void allocator<T>::construct(T* ptr,const T& x){
-    ZMJ::construct(ptr,x);
+    mjstl::construct(ptr,x);
 }
 
 template<class T>
 void allocator<T>::destory(T* ptr){
-    ZMJ::destory(ptr);
+    mjstl::destory(ptr);
 }
 
 template<class T>
 void allocator<T>::destory(T* first,T* last){
-    ZMJ::destory(first,last);
+    mjstl::destory(first,last);
 }
 
 
-}// namespace ZMJ
+}// namespace mjstl
 #endif// !__ALLOCATOR_H__

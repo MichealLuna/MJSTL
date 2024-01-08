@@ -10,7 +10,7 @@
 #include "type_traits.h"
 #include "pair.h"
 
-namespace ZMJ{
+namespace mjstl{
 
 /***********************************************copy***********************************************/
 /*__copy_d*/
@@ -333,6 +333,6 @@ inline bool lexicographical_compare(const unsigned char* first1,const unsigned c
 }
 
 
-}//namespace ZMJ
+}//namespace mjstl
 
 #endif//algobase.h

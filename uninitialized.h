@@ -6,7 +6,7 @@
 #include "sgi_construct.h"
 #include "algobase.h"
 
-namespace ZMJ{
+namespace mjstl{
 
 /*  API: 如果T是is_POD类型直接拷贝，否则逐一调用构造函数。
 *

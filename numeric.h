@@ -3,7 +3,7 @@
 
 #include "iterator.h"
 
-namespace ZMJ{
+namespace mjstl{
 
 /*accumulate:累加*/
 template<class InputIterator, class T>
@@ -102,6 +102,6 @@ OutputIterator partial_sum(InputIterator first, InputIterator last,
     return ++result;
 }
 
-}//namespace ZMJ
+}//namespace mjstl
 
 #endif//numeric.h

@@ -8,7 +8,7 @@
 
 #include "iterator.h"
 #include "type_traits.h"
-namespace ZMJ
+namespace mjstl
 {
 
     /*

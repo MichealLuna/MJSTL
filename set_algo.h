@@ -4,7 +4,7 @@
 #include "iterator.h"
 #include "algobase.h"
 #include <algorithm>
-namespace ZMJ{
+namespace mjstl{
 
 /*set即集合的四种算法： union并集； intersection交集； difference差集； symmetric difference对称差集*/
 /*接收set、multiset容器作为输入区间*/
