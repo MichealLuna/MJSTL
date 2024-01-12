@@ -1,6 +1,8 @@
 #ifndef __DEQUE_H__
 #define __DEQUE_H__
 
+#include <initializer_list>
+
 #include "iterator.h"
 #include "reverse_iterator.h"
 #include "memory.h"
@@ -24,11 +26,12 @@ namespace mjstl
         typedef __queue_iterator<T,const T&,const T*,BufSize>   const_iterator;
         static size_t buffer_size() { return __deque_buf_size(BufSize,sizeof(T));}
 
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef size_t size_type;
-        typedef T** map_pointer;
+        typedef T               value_type;
+        typedef T*              pointer;
+        typedef T&              reference;
+        typedef size_t          size_type;
+        typedef ptrdiff_t       difference_type;
+        typedef T**             map_pointer;
 
         typedef __deque_iterator self;
 
@@ -152,18 +155,18 @@ namespace mjstl
     };
 
 
-    template<class T,class Alloc = alloc,size_t BufSize>
+    template<class T,class Alloc = alloc,size_t BufSize = 0>
     class deque{
     public:
         /*deque嵌套型别定义。*/
-        typedef T   value_type;
-        typedef Alloc allocate_type;
-        typedef value_type* pointer;
-        typedef const value_type* const_pointer;
-        typedef value_type& reference;
-        typedef const value_type& const_reference;
-        typedef size_t size_type;
-        typedef ptrdiff_t difference_type;
+        typedef T                   value_type;
+        typedef Alloc               allocate_type;
+        typedef value_type*         pointer;
+        typedef const value_type*   const_pointer;
+        typedef value_type&         reference;
+        typedef const value_type&   const_reference;
+        typedef size_t              size_type;
+        typedef ptrdiff_t           difference_type;
 
         typedef __deque_iterator<T,T&,T*,BufSize> iterator;
         typedef __deque_iterator<T,const T&,const T*,BufSize> const_iterator;
@@ -173,8 +176,8 @@ namespace mjstl
         static size_t buffer_size(){ return __deque_buf_size(BufSize,sizeof(T));}
 
     public:
-        typedef allocator<T,Alloc> data_allcator;
-        typedef allocator<T*,Alloc> map_allocator;
+        typedef allocator<T>  data_allcator;
+        typedef allocator<T> map_allocator;
 
     protected:
         typedef pointer* map_pointer;
@@ -191,13 +194,16 @@ namespace mjstl
         explicit deque(size_type n){ __fill_initialize(n,T());}
         template<class InputIterator>
         deque(InputIterator first,InputIterator last);
+        deque(std::initializer_list<value_type> ilist);
 
         /*copy constructor*/
         deque(const deque& x);
+        deque(deque&& x);
 
         /*assignment operation*/
         deque& operator=(const deque& x);
-
+        deque& operator=(deque&& x);
+        deque& operator=(std::initializer_list<value_type> ilist);
         /*destructor*/
         ~deque();
 
@@ -230,6 +236,7 @@ namespace mjstl
         /*assign*/
         void assign(size_type n,const T& value){ __fill_assign(n,value);}
         void assign(size_type n){ __fill_assign(n,T());}
+        void assign(std::initializer_list<value_type> ilist);
         template<class InputIterator>
         void assign(InputIterator first,InputIterator last);
         iterator insert(iterator position,const T& x);
@@ -312,6 +319,23 @@ deque<T,Alloc,BufSize>::deque(const deque<T,Alloc,BufSize>& x){
     mjstl::uninitialized_copy(x.begin(),x.end(),start);
 }
 
+template<class T,class Alloc,size_t BufSize>
+deque<T,Alloc,BufSize>::deque(std::initializer_list<value_type> ilist){
+    __map_initialize(x.size());
+    mjstl::uninitialized_copy(x.begin(),x.end(),start);
+}
+
+template<class T,class Alloc,size_t BufSize>
+deque<T,Alloc,BufSize>::deque(deque&& x):
+    start(std::move(x.start)),
+    finish(std::move(x.finish)),
+    map(x.map),
+    map_size(x.map_size)
+{
+    x.map = nullptr;
+    x.map_size = 0;
+}
+
 /*assignment operator*/
 template<class T,class Alloc,size_t BufSize>
 deque<T,Alloc,BufSize>& deque<T,Alloc,BufSize>::operator=(const deque& x){
@@ -325,6 +349,27 @@ deque<T,Alloc,BufSize>& deque<T,Alloc,BufSize>::operator=(const deque& x){
             insert(finish,mid,x.end());
         }
     }
+    return *this;
+}
+
+template<class T,class Alloc,size_t BufSize>
+deque<T,Alloc,BufSize>& 
+deque<T,Alloc,BufSize>::operator=(deque&& x){
+    clear();
+    start = std::move(x.start);
+    finish = std::move(x.finish);
+    map = x.map;
+    map_size = x.map_size;
+    x.map = nullptr;
+    x.map_size = 0;
+    return *this;
+}
+
+template<class T,class Alloc,size_t BufSize>
+deque<T,Alloc,BufSize>& 
+deque<T,Alloc,BufSize>::operator=(std::initializer_list<value_type> ilist){
+    deque tmp(ilist);
+    swap(tmp);
     return *this;
 }
 
@@ -346,6 +391,11 @@ void deque<T,Alloc,BufSize>::assign(InputIterator first,InputIterator last){
     __assign_dispatch(first,last,integer());
 }
 
+template<class T,class Alloc,size_t BufSize>
+void deque<T,Alloc,BufSize>::assign(std::initializer_list<value_type> ilist){
+    typedef typename __is_integer<InputIterator>::is_integer integer;
+    __assign_dispatch(ilist.begin(),ilist.end(),integer());
+}
 /*insert element at position*/
 template<class T,class Alloc,size_t BufSize>
 typename deque<T,Alloc,BufSize>::iterator 
@@ -1033,9 +1083,6 @@ void deque<T,Alloc,BufSize>::__reallocate_map(size_type node_to_add,bool add_at_
     /*这里old_nodes_num包括了原来的finish的节点，所以-1。*/
     finish.set_node(new_start + old_nodes_num - 1);
 }
-
-
-
 
 } // namespace mjstl
 #endif// !__DEQUE_H__
