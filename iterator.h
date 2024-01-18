@@ -13,41 +13,84 @@ namespace mjstl
     struct bidirectional_iterator_tag : public forward_iterator_tag{};
     struct random_access_iterator_tag : public bidirectional_iterator_tag{};
 
+
+    template<class T>
+    struct has_iterator_cat{
+    private:
+        struct two{ char a; char b;};
+
+        template<class U> static two test(...);
+        template<class U> static char test(typename U::iterator_category* = 0);
+    public:
+        static const bool value = sizeof(test<T>(0)) == sizeof(char);
+    };
+
     template<typename Category, typename T, typename Distance = ptrdiff_t, typename Pointer = T*,typename Reference = T&>
-    class itreator{
-        using iterator_category     = Category;
-        using value_type            = T;
-        using difference_type       = Distance;
-        using pointer               = Pointer;
-        using reference             = Reference;
+    struct iterator{
+        typedef  Category      iterator_category;
+        typedef  T             value_type;
+        typedef  Distance      distance_type;
+        typedef  Pointer       pointer;
+        typedef  Reference     reference;
     };
 
-    template <typename T>
-    struct iterator_traits{
-        using iterator_category     =  typename T::iterator_category;
-        using value_type            =  typename T::value_type;
-        using difference_type       =  typename T::difference_type;
-        using pointer               =  typename T::pointer;
-        using reference             =  typename T::reference;
+    template<class Iterator,bool>
+    struct iterator_traits_imp{};
+
+    template<class Iterator>
+    struct iterator_traits_imp<Iterator,true>{
+        typedef typename Iterator::iterator_category    iterator_category;
+        typedef typename Iterator::value_type           value_type;
+        typedef typename Iterator::difference_type      difference_type;
+        typedef typename Iterator::pointer              pointer;
+        typedef typename Iterator::reference            reference;
     };
 
-    template<typename T>
+    template<class Iterator,bool>
+    struct iterator_traits_helper{};
+
+    template<class Iterator>
+    struct iterator_traits_helper<Iterator,true> 
+        : public iterator_traits_imp<Iterator,
+        std::is_convertible<typename Iterator::iterator_category,input_iterator_tag>::value ||
+        std::is_convertible<typename Iterator::iterator_category,output_iterator_tag>::value>{};
+
+    template<class Iterator>
+    struct iterator_traits : public iterator_traits_helper<Iterator,
+        has_iterator_cat<Iterator>::value>{};
+    template<class T>
     struct iterator_traits<T*>{
-        using iterator_category     =  random_access_iterator_tag;
-        using value_type            =  T;
-        using difference_type       =  ptrdiff_t;
-        using pointer               =  T*;
-        using reference             =  T&;
+        typedef random_access_iterator_tag  iterator_category;
+        typedef T                           value_type;
+        typedef ptrdiff_t                   difference_type;
+        typedef T*                          pointer;
+        typedef T&                          reference;
+    };
+    template<class T>
+    struct iterator_traits<const T*>{
+        typedef random_access_iterator_tag  iterator_category;
+        typedef T                           value_type;
+        typedef ptrdiff_t                   difference_type;
+        typedef const T*                    pointer;
+        typedef const T&                    reference;
     };
 
-    template<typename T>
-    struct iterator_traits<const T*>{
-        using iterator_category     =  random_access_iterator_tag;
-        using value_type            =  T;
-        using difference_type       =  ptrdiff_t;
-        using pointer               =  const T*;
-        using reference             =  const T&;
+    /*
+    *   第一个是参数类型T，第二参数相当于一个实参。
+    * 用来实例化这个类共有的value值。
+    */
+    template<class T,T v>
+    struct m_integeral_constant{
+        static constexpr T value = v;
     };
+    /*
+    *   实例化true，false
+    */
+    template<bool b>
+    using m_bool_constant = m_integeral_constant<bool,b>;
+
+    typedef m_bool_constant<true> m_true_type;
+    typedef m_bool_constant<false> m_false_type;
 
     /*iterator_category*/
     template<typename Iterator>
@@ -61,16 +104,16 @@ namespace mjstl
     template<typename Iterator>
     inline typename iterator_traits<Iterator>::difference_type*
     distance_type(const Iterator&){
-        using difference_type = typename iterator_traits<Iterator>::difference_type;
-        return static_cast<typename iterator_traits<Iterator>::difference_type*>(0);
+        typedef typename iterator_traits<Iterator>::difference_type difference_type;
+        return static_cast<difference_type*>(0);
     }
 
     /*value_type*/
     template <typename Iterator>
     inline typename iterator_traits<Iterator>::value_type*
     value_type(const Iterator&){
-        using value_type = typename iterator_traits<Iterator>::value_type;
-        return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
+        typedef typename iterator_traits<Iterator>::value_type value_type;
+        return static_cast<value_type*>(0);
     }
 
     /*以上为什么返回value_type* 和 difference_type* ?  对于value_type*,应该是迭代器维护对象的原生指针。
@@ -136,6 +179,33 @@ namespace mjstl
     inline void __advance(RandonAccessIterator& i,Distance n,random_access_iterator_tag){
         i += n;
     }
+
+    template<class T,class U,bool = has_iterator_cat<iterator_traits<T>>::value>
+    struct has_iterator_cat_of : public m_bool_constant<std::is_convertible<
+        typename iterator_traits<T>::iterator_category,U>::value>
+    {};
+
+    template<class T,class U>
+    struct has_iterator_cat_of<T,U,false> : public m_false_type{};
+
+    template<class T>
+    struct is_input_iterator : public has_iterator_cat_of<T,input_iterator_tag>{};
+
+    template<class T>
+    struct is_output_iterator : public has_iterator_cat_of<T,output_iterator_tag>{};
+
+    template<class T>
+    struct is_forward_iterator : public has_iterator_cat_of<T,forward_iterator_tag>{};
+
+    template<class T>
+    struct is_bidirectional_iterator : public has_iterator_cat_of<T,bidirectional_iterator_tag>{};
+
+    template<class T>
+    struct is_random_access_iterator : public has_iterator_cat_of<T,random_access_iterator_tag>{};
+
+    template<class Iter>
+    struct is_iterator : public m_bool_constant<is_input_iterator<Iter>::value ||
+        is_output_iterator<Iter>::value>{};
 
 } // namespace mjstl
 #endif// !__ITERATOR_H__
