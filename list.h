@@ -573,7 +573,7 @@ inline bool operator>=(const list<T,Alloc>& x,const list<T,Alloc>& y){
 }
 
 template<class T,class Alloc>
-inline void swap(const list<T,Alloc>& x,const list<T,Alloc>& y){
+inline void swap(list<T,Alloc>& x,list<T,Alloc>& y){
     x.swap(y);
 }
 } // namespace mjstl
