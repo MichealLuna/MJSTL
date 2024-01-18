@@ -1,6 +1,8 @@
 #ifndef __TYPE_TRAITS_H__
 #define __TYPE_TRAITS_H__
 
+#include <type_traits>
+
 /*编译器内置了下面两种类型，冲突了。*/
 struct __true_type{};
 struct __false_type{};
@@ -190,6 +192,16 @@ struct __type_traits<T*>{
 /*判断是否为int类型*/
 template<class T>
 struct __is_integer{
+    typedef __false_type is_integer;
+};
+
+template<class U>
+struct __is_integer<U*>{
+    typedef __false_type is_integer;
+};
+
+template<class U>
+struct __is_integer<const U*>{
     typedef __false_type is_integer;
 };
 
