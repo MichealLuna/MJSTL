@@ -75,28 +75,28 @@ inline wchar_t* uninitialized_copy(wchar_t* first, wchar_t* last, wchar_t* resul
 /**********************************uninitialized_fill**********************************/
 template<class ForwardIterator, class T>
 inline void
-__uninitialized_copy_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type){
+__uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& x, __true_type){
     fill(first,last,x);
 }
 
 template<class ForwardIterator, class T>
 inline void
-__uninitialized_copy_aux(ForwardIterator first, ForwardIterator last, const T& x, __false_type){
+__uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& x, __false_type){
     for(; first != last; ++first)
         construct(&*first, x);
 }
 
 template<class ForwardIterator, class T>
 inline void
-__uninitialized_copy(ForwardIterator first, ForwardIterator last, const T& x, T*){
+__uninitialized_fill(ForwardIterator first, ForwardIterator last, const T& x, T*){
     typedef typename __type_traits<T>::is_POD_type is_POD;
-    return __uninitialized_copy_aux(first, last, x, is_POD());
+    return __uninitialized_fill_aux(first, last, x, is_POD());
 }
 
 template<class ForwardIterator, class T>
 inline void
 uninitialized_fill(ForwardIterator first , ForwardIterator last, const T& x){
-    return __uninitialized_copy(first, last, x, value_type(first));
+    return __uninitialized_fill(first, last, x, value_type(first));
 }
 
 /**********************************uninitialized_fill_n**********************************/
@@ -126,6 +126,13 @@ inline ForwardIterator
 uninitialized_fill_n(ForwardIterator first, Size n, const T& x){
     return __uninitialized_fill_n(first,n,x,value_type(first));
 }
+
+/*
+*  debug:
+*  1、这里uninitialized_copy跟uninitialized_fill的辅助函数名冲突了，
+*  导致编译器报is ambiguous。（仔细看报错note：提示两个地方的候选
+*  模板，才发现重命名了。）
+*/
 
 };//namespace ZMJ
 #endif//uninitialized.h
