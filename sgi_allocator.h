@@ -14,9 +14,10 @@
 #define THROW_BAD_ALLOC throw std::bad_alloc
 #elif !defined(THROW_BAD_ALLOC)
 #include <iostream>
-#define THROW_BAD_ALLOC                        \
+#define THROW_BAD_ALLOC  do{                   \
     std::cerr << "out of memory" << std::endl; \
-    exit(1);
+    exit(1);                                   \
+}while(0)
 #endif
 
 namespace mjstl
@@ -69,13 +70,11 @@ namespace mjstl
     void (*malloc_alloc_template<inst>::malloc_alloc_oom_handler)() = 0;
 
     template <int inst>
-    void *malloc_alloc_template<inst>::oom_malloc(size_t n)
-    {
+    void* malloc_alloc_template<inst>::oom_malloc(size_t n){
         malloc_handler handler;
         void *result;
 
-        for (;;)
-        {
+        while(1){
             handler = malloc_alloc_oom_handler;
             if (handler == 0)
                 THROW_BAD_ALLOC;
