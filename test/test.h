@@ -431,9 +431,9 @@ void TESTCASE_NAME(testcase_name)::Run()
 #define LEN2    100000
 #define LEN3    1000000
 #else
-#define LEN1    100000
-#define LEN2    1000000
-#define LEN3    10000000
+#define LEN1    10000
+#define LEN2    100000
+#define LEN3    1000000
 #endif
 
 #define SCALE_LLL(N) (N * 20)
@@ -482,7 +482,7 @@ void TESTCASE_NAME(testcase_name)::Run()
 #define FUN_VALUE(fun) do{                                      \
     std::string fun_name = #fun;                                \
     std::cout<<" "<< fun_name << " : " << fun <<"\n";           \
-}while(0)
+}while(0);
 
 // 输出测试数量级
 void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
