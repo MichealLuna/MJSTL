@@ -6,6 +6,11 @@
 #include<cstring>
 #endif//! USE_CSTRING
 
+#ifndef USE_CMATH
+#define USE_CMATH
+#include<cmath>
+#endif//! USE_CMATH
+
 #include "iterator.h"
 #include "type_traits.h"
 #include "pair.h"
@@ -13,6 +18,7 @@
 namespace mjstl{
 
 /***********************************************copy***********************************************/
+/*这个copy行为只有在传入的是指针，并且是has_trivial_assignment_operator时才使用memmove。*/
 /*__copy_d*/
 template<class RandomAccessIterator, class OutputIterator,class Distance>
 inline OutputIterator
@@ -330,6 +336,21 @@ inline bool lexicographical_compare(const unsigned char* first1,const unsigned c
     const size_t len2 = last2 - first2;
     const int result = ::memcmp(first1,first2,min(len1,len2));
     return result != 0 ? result < 0 : len1 < len2;
+}
+
+template<class T>
+inline T abs(T value){
+    return value > 0 ? value : -value;
+}
+
+template<> 
+inline float abs<float>(float value){
+    return std::fabs(value);
+}
+
+template<> 
+inline double abs<double>(double value){
+    return std::fabs(value);
 }
 
 
