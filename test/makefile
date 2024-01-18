@@ -1,11 +1,18 @@
-target:alloc_t vec_t
-
 CC=g++
-CFALGS=-g
+INCLUDE_DIRS = -I./ -I../
+CFALGS= -Wall -Wl,--stack,8388608 -g $(INCLUDE_DIRS)
 
+SOURCES = test.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = mjtest
 
-alloc_t:test_allocator.cpp
-	$(CC) $(CFALGS) -I../ -o alloc_t test_allocator.cpp
+all:$(EXECUTABLE)
 
-vec_t:test_allocator.cpp
-	$(CC) $(CFALGS) -I../ -o vec_t test_vector.cpp
+$(EXECUTABLE):$(OBJECTS)
+	$(CC) $(CFALGS) $(OBJECTS) -o $@
+
+%.o:%.cpp
+	$(CC) $(CFALGS) -c $< -o $@
+
+clean:
+	del
