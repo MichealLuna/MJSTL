@@ -28,7 +28,7 @@ public:
     }
 
     reference operator*() const{
-        Iterator tmp = current; /*实际对应正向迭代器前一个位置。*/
+        auto tmp = current; /*实际对应正向迭代器前一个位置。*/
         return *--tmp;
     }
 
@@ -45,7 +45,7 @@ public:
     self operator++(int){
         self tmp = *this;
         --current;
-        return *tmp;
+        return tmp;
     }
 
     /*后退变前进*/
@@ -69,7 +69,7 @@ public:
     }
 
     self operator-=(difference_type n) {
-        current = current + n;
+        current += n;
         return *this;
     }
 
