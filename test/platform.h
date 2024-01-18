@@ -81,6 +81,7 @@
     #define REDBUD_HAS_CXX11 1
     #else
         #define REDBUD_HAS_CXX11 0
+    #endif
 #endif// !REDBUD_HAS_CXX11
 
 #if REDBUD_HAS_CXX11 == 0

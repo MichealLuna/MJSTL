@@ -10,7 +10,7 @@
 #ifndef ALINSHANS_REDBUD_IO_COLOR_H_
 #define ALINSHANS_REDBUD_IO_COLOR_H_
 
-#include "./platform.h"
+#include "platform.h"
 
 #if defined(REDBUD_LINUX) || defined(REDBUD_OSX)
     #include <unistd.h> //getenv
@@ -317,8 +317,7 @@ inline details::color_return_t<T>
 operator<<(std::ostream& os,const T& value)
 {
     return (os.iword(details::get_iword()) ||
-            (details::is_modifialbe())  &&
-            details::is_terminal(os.rdbuf()))?
+            ((details::is_modifialbe()) && details::is_terminal(os.rdbuf())))?
             details::set_color(os,value):os;
 }
 
