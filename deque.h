@@ -249,7 +249,7 @@ namespace mjstl
         const_reverse_iterator rend() const { return reverse_iterator(begin());}
 
         /*about container operation*/
-        bool empty(){ return begin() == end();}
+        bool empty() const noexcept { return begin() == end();}
         size_type size() const { return finish - start;}
         size_type max_size() const { return size_type(-1)/sizeof(T);}
 
