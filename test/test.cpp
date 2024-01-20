@@ -9,13 +9,15 @@
 #endif// check memory leaks
 
 #include "deque_test.h"
+#include "stack_test.h"
 
 int main(){
     using namespace mjstl::test;
 
     std::cout.sync_with_stdio(false);
     // RUN_ALL_TESTS();
-    deque_test::deque_test();
+    //deque_test::deque_test();
+    stack_test::stack_test();
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 _CrtDumpMemoryLeaks();
