@@ -29,6 +29,9 @@ public:
 
     static void construct(T* ptr);
     static void construct(T* ptr,const T& x);
+    template<class...Args>
+    static void construct(T* ptr,Args&& ...args);
+
     static void destory(T* ptr);
     static void destory(T* ptr,T* last);
 };
@@ -65,6 +68,13 @@ void allocator<T>::construct(T* ptr){
 template<class T>
 void allocator<T>::construct(T* ptr,const T& x){
     mjstl::construct(ptr,x);
+}
+
+template<class T>
+template<class...Args>
+void allocator<T>::construct(T* ptr,Args&& ...args)
+{
+    mjstl::construct(ptr,std::forward<Args>(args)...);
 }
 
 template<class T>
