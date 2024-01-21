@@ -278,10 +278,21 @@ namespace mjstl
         iterator erase(iterator position);
         iterator erase(iterator first,iterator last);
         void clear();
+
+        template<class ...Args>
+        iterator emplace(iterator position,Args&&... args);
+        template<class ...Args>
+        void emplace_front(Args&&... args);
+        template<class ...Args>
+        void emplace_back(Args&&... args);
+
+        void push_back(value_type&& value);
+        void push_front(value_type&& value);
         void push_back(const T& x);
         void push_front(const T& x);
         void pop_back();
         void pop_front();
+
         void resize(size_type new_size,const T& x);
         void resize(size_type new_size){ resize(new_size,T());}
         void swap(deque& x);
@@ -323,6 +334,8 @@ namespace mjstl
         void __insert_dispatch_aux(iterator,InputIterator,InputIterator,input_iterator_tag);
         template<class ForwardIterator>
         void __insert_dispatch_aux(iterator,ForwardIterator,ForwardIterator,forward_iterator_tag);
+        template<class ...Args>
+        iterator __emplace_aux(iterator position,Args&& ...args);
         void __push_back_aux(const T& x);
         void __push_front_aux(const T& x);
         void __pop_back_aux();
@@ -542,14 +555,100 @@ void deque<T,Alloc,BufSize>::clear(){
     finish = start;
 }
 
-/*insert an element at the end of container*/
 template<class T,class Alloc,size_t BufSize>
-void deque<T,Alloc,BufSize>::push_back(const T& x){
+template<class ...Args>
+typename deque<T,Alloc,BufSize>::iterator 
+deque<T,Alloc,BufSize>::__emplace_aux(iterator position,Args&& ...args){
+    size_type elements_before = static_cast<size_type>(position - start);
+    value_type x_copy = value_type(std::forward<Args>(args)...);
+    if(elements_before < (size() >> 1)){
+        push_front(front());
+        iterator old_start1 = start;
+        ++old_start1;
+        iterator old_start2 = old_start1;
+        ++old_start2;
+        /*
+        *   为什么这个看起来多此一举？
+        *  因为先前push_front,可能会重新调整map，导致position的node失效。
+        */
+        position = start + elements_before;
+        *old_start1 = *old_start2;
+    }else{
+        push_back(back());
+        iterator old_finish1 = finish;
+        --old_finish1;
+        iterator old_finish2 = old_finish1;
+        --old_finish2;
+        position = start + elements_before;
+        *old_finish1 = *old_finish2;
+    }
+    *position = std::move(x_copy);
+    return position;
+}
+
+template<class T,class Alloc,size_t BufSize>
+template<class ...Args>
+typename deque<T,Alloc,BufSize>::iterator 
+deque<T,Alloc,BufSize>::emplace(iterator position,Args&&... args){
+    if(position.cur == start.cur){
+        emplace_front(std::forward<Args>(args)...);
+        return start;
+    }else if(position.cur == finish.cur){
+        emplace_back(std::forward<Args>(args)...);
+        return finish - 1;
+    }
+    return __emplace_aux(position,std::forward<Args>(args)...);
+}
+
+template<class T,class Alloc,size_t BufSize>
+template<class ...Args>
+void deque<T,Alloc,BufSize>::emplace_front(Args&&... args){
+    if(start.cur != start.first){
+        mjstl::construct((start.cur - 1),std::forward<Args>(args)...);
+        --start.cur;
+    }else{
+        __reserve_map_at_front();
+        *(start.node - 1) = data_allocator::allocate(buffer_size());
+        start.set_node(start.node - 1);
+        start.cur = start.last - 1;
+        try{
+            data_allocator::construct(start.cur,std::forward<Args>(args)...);
+        }catch(...){
+            ++start.cur;
+            throw;
+        }
+    }
+}
+
+template<class T,class Alloc,size_t BufSize>
+template<class ...Args>
+void deque<T,Alloc,BufSize>::emplace_back(Args&&... args){
     if(finish.cur != finish.last - 1){
-        data_allocator::construct(finish.cur,x);
+        mjstl::construct((finish.cur),std::forward<Args>(args)...);
         ++finish.cur;
-    }else
-        __push_back_aux(x);
+    }else{
+        __reserve_map_at_back();
+        *(finish.node + 1) = data_allocator::allocate(buffer_size());
+        finish.set_node(finish.node + 1);
+        finish.cur = finish.first;
+        try{
+            data_allocator::construct(finish.cur,std::forward<Args>(args)...);
+            ++finish.cur;
+        }catch(...){
+            --finish.cur;
+            throw;
+        }
+    }
+}
+
+template<class T,class Alloc,size_t BufSize>
+void deque<T,Alloc,BufSize>::push_back(value_type&& value){
+    emplace_back(std::move(value));
+}
+
+template<class T,class Alloc,size_t BufSize>
+void deque<T,Alloc,BufSize>::push_front(value_type&& value){
+    emplace_front(std::move(value));
 }
 
 /*insert an element at the begin of container*/
@@ -570,6 +669,16 @@ void deque<T,Alloc,BufSize>::pop_back(){
         data_allocator::destory(finish.cur);
     }else
         __pop_back_aux();
+}
+
+/*insert an element at the end of container*/
+template<class T,class Alloc,size_t BufSize>
+void deque<T,Alloc,BufSize>::push_back(const T& x){
+    if(finish.cur != finish.last - 1){
+        data_allocator::construct(finish.cur,x);
+        ++finish.cur;
+    }else
+        __push_back_aux(x);
 }
 
 template<class T,class Alloc,size_t BufSize>
@@ -1110,6 +1219,9 @@ void deque<T,Alloc,BufSize>::__reserve_map_at_front(size_type n){
         __reallocate_map(n,true);
 }
 
+/*
+*  只更新变换后的原start、原finsh在新map数组里面的位置，但预留node_to_add个位置。
+*/
 template<class T,class Alloc,size_t BufSize>
 void deque<T,Alloc,BufSize>::__reallocate_map(size_type node_to_add,bool add_at_front){
     /*finish.node 可能等于start.node,但是deque的map_pointer数组至少有一个缓冲区，所以+1。*/
@@ -1138,7 +1250,6 @@ void deque<T,Alloc,BufSize>::__reallocate_map(size_type node_to_add,bool add_at_
     }
 
     start.set_node(new_start);
-    /*这里old_nodes_num包括了原来的finish的节点，所以-1。*/
     finish.set_node(new_start + old_nodes_num - 1);
 }
 

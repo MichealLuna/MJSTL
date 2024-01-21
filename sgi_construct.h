@@ -17,7 +17,7 @@ namespace mjstl
     template <class T, class V>
     inline void construct(T *p, const V &v)
     {
-        new (p) T(v);
+        ::new (p) T(v);
     }
 
     /*对于一般泛化版本destory*/
@@ -25,6 +25,12 @@ namespace mjstl
     inline void destory(T *p)
     {
         p->~T();
+    }
+
+    template<class T,class ...Args>
+    inline void construct(T* p,Args&&... args)
+    {
+        ::new ((void*)p) T(std::forward<Args>(args)...);
     }
 
     /*对于迭代器版本的destory*/
