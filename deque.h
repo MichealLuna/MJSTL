@@ -1253,5 +1253,48 @@ void deque<T,Alloc,BufSize>::__reallocate_map(size_type node_to_add,bool add_at_
     finish.set_node(new_start + old_nodes_num - 1);
 }
 
+template<class T,class Alloc,size_t BufSize>
+bool operator==(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return lhs.size() == rhs.size() && mjstl::equal(lhs.begin(),lhs.end(),
+        rhs.begin(),rhs.end());
+}
+
+template<class T,class Alloc,size_t BufSize>
+bool operator!=(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<class T,class Alloc,size_t BufSize>
+bool operator<(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return mjstl::lexicographical_compare(lhs.begin(),lhs.end(),rhs.begin(),rhs.end());
+}
+
+template<class T,class Alloc,size_t BufSize>
+bool operator>(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return rhs < lhs;
+}
+
+template<class T,class Alloc,size_t BufSize>
+bool operator<=(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return !(rhs < lhs);
+}
+
+template<class T,class Alloc,size_t BufSize>
+bool operator>=(const deque<T,Alloc,BufSize>& lhs,const deque<T,Alloc,BufSize>& rhs)
+{
+    return !(lhs < rhs);
+}
+
+template<class T,class Alloc,size_t BufSize>
+void swap(deque<T,Alloc,BufSize>& lhs,deque<T,Alloc,BufSize>& rhs)
+{
+    lhs.swap(rhs);
+}
+
 } // namespace mjstl
 #endif// !__DEQUE_H__
