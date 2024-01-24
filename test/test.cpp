@@ -10,14 +10,16 @@
 
 #include "deque_test.h"
 #include "stack_test.h"
+#include "queue_test.h"
 
 int main(){
     using namespace mjstl::test;
 
     std::cout.sync_with_stdio(false);
-    // RUN_ALL_TESTS();
-    //deque_test::deque_test();
+    RUN_ALL_TESTS();
+    deque_test::deque_test();
     stack_test::stack_test();
+    queue_test::queue_test();
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 _CrtDumpMemoryLeaks();
