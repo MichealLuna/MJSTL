@@ -57,7 +57,7 @@ inline void push_heap_d(RandomAccessIterator first,RandomAccessIterator last,
 
 template<class RandomAccessIterator,class Compare>
 inline void push_heap(RandomAccessIterator first, RandomAccessIterator last, Compare comp){
-    push_heap_d(first,last,comp,distance_type(first),value_type(first));
+    push_heap_d(first,last,distance_type(first),comp);
 }
 
 
