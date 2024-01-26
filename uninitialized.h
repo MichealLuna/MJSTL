@@ -5,6 +5,7 @@
 #include "type_traits.h"
 #include "sgi_construct.h"
 #include "algobase.h"
+#include "util.h"
 
 namespace mjstl{
 
@@ -126,6 +127,36 @@ inline ForwardIterator
 uninitialized_fill_n(ForwardIterator first, Size n, const T& x){
     return __uninitialized_fill_n(first,n,x,value_type(first));
 }
+
+template<class InputIterator,class ForwardIterator>
+ForwardIterator
+unchecked_uninit_move(InputIterator first,InputIterator last,
+    ForwardIterator result,std::false_type){
+    ForwardIterator cur = result;
+    try{
+        for(;first != last; ++first,++cur)
+            mjstl::construct(&*cur,mjstl::move(*first));
+    }catch(...){
+        mjstl::destory(result,cur);
+    }
+    return cur;
+}
+
+template<class InputIterator,class ForwardIterator>
+ForwardIterator
+unchecked_uninit_move(InputIterator first,InputIterator last,
+    ForwardIterator result,std::true_type){
+    return mjstl::move(first,last,result);
+}
+
+template<class InputIterator,class ForwardIterator>
+ForwardIterator 
+uninitialized_move(InputIterator first,InputIterator last,ForwardIterator result){
+    return unchecked_uninit_move(first,last,result,
+        std::is_trivially_move_assignable<typename iterator_traits<
+            InputIterator>::value_type>{});
+}
+
 
 /*
 *  debug:
