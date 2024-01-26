@@ -14,6 +14,7 @@
 #include "iterator.h"
 #include "type_traits.h"
 #include "pair.h"
+#include "util.h"
 
 namespace mjstl{
 
@@ -267,6 +268,44 @@ char* fill_n(char* first,Size n,char& value){
     fill(first,first+n,value);
     return first + n;
 }
+
+/***********************************************move***********************************************/
+template<class InputIterator,class OutputIterator>
+OutputIterator 
+unchecked_move_cat(InputIterator first,InputIterator last,
+    OutputIterator result,mjstl::input_iterator_tag){
+    for(;first != last; ++first,++result)
+        *result = mjstl::move(*first);
+    return result;
+}
+
+template<class InputIterator,class OutputIterator>
+OutputIterator 
+unchecked_move_cat(InputIterator first,InputIterator last,
+    OutputIterator result,mjstl::random_access_iterator_tag){
+    for(auto n = last - first; n > 0; --n,++first,++result)
+        *result = mjstl::move(*first);
+    return result;
+}
+
+template<class InputIterator,class OutputIterator>
+OutputIterator 
+unchecked_move(InputIterator first,InputIterator last,OutputIterator result){
+    return unchecked_move_cat(first,last,result,iterator_category(first));
+}
+
+template<class Tp,class Up>
+typename std::enable_if<
+  std::is_same<typename std::remove_const<Tp>::type,Up>::value &&
+  std::is_trivially_move_assignable<Up>::value,
+  Up*>::type 
+unchecked_move(Tp* first,Tp* last,Up* result){
+    const size_t n = static_cast<size_t>(last - first);
+    if(n != 0)
+        std::memmove(result,first,n);
+    return result + n;
+}
+
 
 /***********************************************iter_swap***********************************************/
 /*交换两个ForwardIterator 所指对象*/
