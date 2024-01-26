@@ -1,6 +1,8 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <cassert>
+
 #include "iterator.h"
 #include "reverse_iterator.h"
 #include "memory.h"
@@ -37,14 +39,17 @@ public:
     vector():start(nullptr),finish(nullptr),end_of_storage(nullptr){}
     explicit vector(size_type n){ __allocate_and_fill(n,T()); }
     vector(size_type n, const T& value){ __allocate_and_fill(n,value); }
-    template<class InputIterator>
+    template<class InputIterator,typename std::enable_if< 
+        mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
     vector(InputIterator first,InputIterator last);
+    vector(std::initializer_list<value_type> ilist);
 
     /*copy construct*/
     vector(const vector& x);
     vector(vector&& x);
 
     /*assignment operator*/
+    vector& operator=(std::initializer_list<value_type> ilist);
     vector& operator=(const vector& x);
     vector& operator=(vector&& x);
 
@@ -86,9 +91,14 @@ public:
     /*modify container*/
     void assign(size_type n,const T& value) { __fill_assign(n,value);}
     void assign(size_type n) { __fill_assign(n,T());}
-    template<class InputIterator>
+    template<class InputIterator,typename std::enable_if<
+        mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
     void assign(InputIterator first,InputIterator last);
+    template<class ...Args>
+    void emplace_back(Args&& ...args);
     void push_back(const T& value);
+    void push_back(T&& value);
+
     void pop_back();
     iterator erase(iterator position);
     iterator erase(iterator first,iterator last);
@@ -96,7 +106,8 @@ public:
     iterator insert(iterator position,const T& x);
     iterator insert(iterator position);
     void insert(iterator position, size_type n,const T& value);
-    template<class InputIterator>
+    template<class InputIterator,typename std::enable_if<
+        mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
     void insert(iterator position,InputIterator first,InputIterator last);
     inline void swap(vector<T,Alloc>& rhs);
     bool empty() const{ return begin() == end();}
@@ -134,6 +145,9 @@ protected:
 
     void __insert_aux(iterator position,const T& value);
 
+    template<class ...Args>
+    void __emplace_insert_aux(iterator position,Args&& ...args);
+
     template<class Integer>
     void __insert_dispatch(iterator position,Integer n,Integer ,__true_type);
 
@@ -153,10 +167,10 @@ protected:
 };
 
 template<class T,class Alloc>
-template<class InputIterator>
+template<class InputIterator,typename std::enable_if<
+    mjstl::is_input_iterator<InputIterator>::value,int>::type>
 vector<T,Alloc>::vector(InputIterator first,InputIterator last){
-    typedef typename __is_integer<InputIterator>::is_integer integer;
-    __vector_construct(first,last,integer());
+    __vector_construct(first,last,__false_type());
 }
 
 template<class T,class Alloc>
@@ -180,8 +194,14 @@ template <class T, class Alloc>
 vector<T, Alloc>::vector(vector<T, Alloc>&& x) {
 	start = x.start;
     finish = x.finish;
-    end_of_storage = x.end_of_storge;
+    end_of_storage = x.end_of_storage;
     x.start = x.finish = x.end_of_storage = 0;
+}
+
+template<class T,class Alloc>
+vector<T, Alloc>::vector(std::initializer_list<T> ilist){
+    typedef typename __is_integer<typename std::initializer_list<T>::iterator>::is_integer integer;
+    __vector_construct(ilist.begin(),ilist.end(),integer());
 }
 
 template <class T, class Alloc>
@@ -225,10 +245,23 @@ void vector<T,Alloc>::resize(size_type new_size,const T& value){
 }
 
 template<class T,class Alloc>
-template<class InputIterator>
+template<class InputIterator,typename std::enable_if<
+        mjstl::is_input_iterator<InputIterator>::value,int>::type>
 void vector<T,Alloc>::assign(InputIterator first,InputIterator last){
     typedef typename __is_integer<InputIterator>::is_integer is_integer;
     __assign_dispatch(first,last,is_integer());
+}
+
+template <class T, class Alloc>
+template <class ...Args>
+void vector<T,Alloc>::emplace_back(Args&& ...args){
+    if(finish != end_of_storage){
+        data_allocator::construct(finish,std::forward<Args>(args)...);
+        ++finish;
+    }
+    else{
+        __emplace_insert_aux(end(),std::forward<Args>(args)...);
+    }
 }
 
 template <class T, class Alloc>
@@ -241,6 +274,12 @@ void vector<T,Alloc>::push_back(const T& value){
         __insert_aux(end(), value);
     }
 }
+
+template <class T, class Alloc>
+void vector<T,Alloc>::push_back(T&& value){
+    emplace_back(std::move(value));
+}
+
 
 template <class T, class Alloc>
 void vector<T,Alloc>::pop_back(){
@@ -279,6 +318,13 @@ vector<T,Alloc>::erase(iterator first,iterator last){
 }
 
 template <class T, class Alloc>
+void vector<T,Alloc>::clear(){
+    data_allocator::destory(start,finish);
+    finish = start;
+}
+
+
+template <class T, class Alloc>
 void vector<T,Alloc>::swap(vector<T,Alloc>& rhs){
     mjstl::swap(start,rhs.start);
     mjstl::swap(finish,rhs.finish);
@@ -288,6 +334,37 @@ void vector<T,Alloc>::swap(vector<T,Alloc>& rhs){
 template <class T, class Alloc>
 inline void swap(vector<T,Alloc>& x,vector<T,Alloc>& y){
     x.swap(y);
+}
+
+template <class T, class Alloc>
+template<class ...Args>
+void vector<T, Alloc>::__emplace_insert_aux(iterator position,Args&& ...args){
+    if(size() + 1 <= capacity()){ /*有剩余空间*/
+        construct(finish,back());
+        ++finish;
+        copy_backward(position,finish - 2,finish - 1);
+        mjstl::construct(position,mjstl::forward<Args>(args)...);
+    }else{
+        const size_type old_size = size();
+        const size_type new_size = old_size == 0 ? 1 : 2 * old_size;
+
+        iterator new_start = data_allocator::allocate(new_size);
+        iterator new_finish = new_start;
+        try{
+            new_finish = uninitialized_copy(start,position,new_start);
+            mjstl::construct(new_finish,mjstl::forward<Args>(args)...);
+            ++new_finish;
+            new_finish = uninitialized_copy(position,finish,new_finish);
+        }catch(...){
+            mjstl::destory(new_start,new_finish);
+            data_allocator::deallocate(new_start,new_size);
+            throw;
+        }
+        __destory_and_deallocate();
+        start = new_start;
+        finish = new_finish;
+        end_of_storage = start + new_size;
+    }
 }
 
 //__insert_aux 函数
@@ -321,7 +398,7 @@ void vector<T, Alloc>::__insert_aux(iterator position, const T& x){
             ++new_finish;
             new_finish = uninitialized_copy(position,finish,new_finish);
         }catch(...){
-            destroy(new_start,new_finish);
+            mjstl::destory(new_start,new_finish);
             data_allocator::deallocate(new_start,new_size);
             throw;
         }
@@ -351,7 +428,8 @@ vector<T,Alloc>::insert(iterator position){
 }
 
 template<class T,class Alloc>
-template<class InputIterator>
+template<class InputIterator,typename std::enable_if<
+    mjstl::is_input_iterator<InputIterator>::value,int>::type>
 void vector<T,Alloc>::insert(iterator position,InputIterator first,
     InputIterator last){
     typedef typename __is_integer<InputIterator>::is_integer is_integer;
@@ -458,7 +536,9 @@ template<class T,class Alloc>
 template<class ForwardIterator>
 void vector<T,Alloc>::__assign_aux(ForwardIterator first,ForwardIterator last,
     forward_iterator_tag){
-    difference_type len = distance(first,last);
+    auto dst = distance(first,last);
+    assert(dst >= 0);
+    size_type len = static_cast<size_type>(dst);
     if(len > capacity()){
         __destory_and_deallocate();
         __allocate_and_copy(first,last);
@@ -535,7 +615,7 @@ void vector<T,Alloc>::__range_insert(iterator position,ForwardIterator first,
                 copy(first,last,position);
             }else{
                 ForwardIterator mid = first;
-                advance(mid,n - after_elems);
+                advance(mid,after_elems);
                 finish = uninitialized_copy(mid,last,finish);
                 finish = uninitialized_copy(position,old_finish,finish);
                 copy(first,mid,position);
