@@ -269,7 +269,7 @@ char* fill_n(char* first,Size n,char& value){
     return first + n;
 }
 
-/***********************************************move***********************************************/
+/********************************************unchecked_move********************************************/
 template<class InputIterator,class OutputIterator>
 OutputIterator 
 unchecked_move_cat(InputIterator first,InputIterator last,
