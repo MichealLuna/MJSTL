@@ -191,7 +191,7 @@ namespace mjstl
     void *default_alloc_template<threads, inst>::allocate(size_t bytes)
     {
         obj *volatile *free_list_node;
-        obj *result;
+        obj *result = 0;
 
         /*如果申请的空间大于128，则使用一级内存分配器。*/
         if (bytes > (size_t)max_size)
