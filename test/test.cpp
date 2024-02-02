@@ -8,6 +8,7 @@
 #include<crtdbg.h>
 #endif// check memory leaks
 
+#include "list_test.h"
 #include "vector_test.h"
 #include "deque_test.h"
 #include "stack_test.h"
@@ -18,10 +19,12 @@ int main(){
 
     std::cout.sync_with_stdio(false);
     RUN_ALL_TESTS();
-    vector_test::vector_test();
+    
+    // vector_test::vector_test();
     // deque_test::deque_test();
     // stack_test::stack_test();
     // queue_test::queue_test();
+    list_test::list_test();
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 _CrtDumpMemoryLeaks();
