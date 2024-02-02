@@ -16,8 +16,8 @@ namespace mjstl
 
         __list_node():data(0),prev(nullptr),next(nullptr){}
 
-        __list_node(T value = 0,__list_node<T>* p,
-            __list_node<T>* n):data(value),prev(p),next(n){}
+        __list_node(const T& value,__list_node<T>* p = nullptr,
+            __list_node<T>* n = nullptr):data(value),prev(p),next(n){}
     };
 
     /*iteartor*/
@@ -31,13 +31,14 @@ namespace mjstl
         typedef Ptr pointer;
         typedef Ref reference;
         typedef size_t size_type;
+        typedef ptrdiff_t difference_type;
 
         typedef __list_node<T>* link_type;
 
         link_type node;
 
         /*constructor*/
-        __list_iterator(){}
+        __list_iterator():node(nullptr){}
         __list_iterator(link_type x):node(x){}
         __list_iterator(const iterator& x):node(x.node){}
 
@@ -45,7 +46,7 @@ namespace mjstl
         bool operator==(const self& x) const{ return node == x.node;}
         bool operator!=(const self& x) const{ return node != x.node;}
         reference operator*() const { return (*node).data;}
-        pointer operator->() const { return &((*node).data);}
+        pointer operator->() const { return &(operator*());}
         self& operator++(){
             node = node->next;
             return *this;
@@ -83,59 +84,67 @@ namespace mjstl
 
         typedef __list_iterator<T,T&,T*>                iterator;
         typedef __list_iterator<T,const T&,const T*>    const_iterator;
-        typedef reverse_iterator<iterator>              reverse_iterator;
-        typedef reverse_iterator<const_iterator>        const_reverse_iterator;
+        typedef mjstl::reverse_iterator<iterator>              reverse_iterator;
+        typedef mjstl::reverse_iterator<const_iterator>        const_reverse_iterator;
 
     public:
-        typedef Alloc       data_allocate;
+        typedef mjstl::allocator<__list_node<T>> data_allocator;
     public:
         typedef __list_node<T>* link_type;
 
     protected:
         link_type node;
+        size_type size_;
     public:
         list(){ __initialize();}
         explicit list(size_type n);
         explicit list(size_type n,const T& value);
-        template<class InputIterator>
+        list(std::initializer_list<value_type> ilist);
+        template<class InputIterator,typename std::enable_if<
+            mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
         list(InputIterator first,InputIterator last);
 
         /*copy constructor*/
         list(const list& x);
+        list(list&& x);
 
         /*assignment operator*/
         list& operator=(const list& x);
-
+        list& operator=(list&& x);
+        list& operator=(std::initializer_list<value_type> ilist);
         /*destructor*/
         ~list();
 
     public:
         /*about iterator*/
-        iterator begin(){ return (link_type)node->next;}
-        const_iterator begin(){ return (link_type)node->next;}
-        iterator end(){ return node;}
-        const_iterator end(){ return node;}
+        iterator begin(){ return iterator(node->next);}
+        const_iterator begin() const { return iterator(node->next);}
+        iterator end(){ return iterator(node);}
+        const_iterator end() const { return node;}
         reverse_iterator rbegin(){ return reverse_iterator(end());}
-        const_reverse_iterator rbegin(){ return reverse_iterator(end());}
+        const_reverse_iterator rbegin() const { return reverse_iterator(end());}
         reverse_iterator rend(){ return reverse_iterator(begin());}
-        const_reverse_iterator rend(){ return reverse_iterator(begin());}
+        const_reverse_iterator rend() const { return reverse_iterator(begin());}
 
         /*about container*/
         reference front(){ return *begin();}
-        const_reference front(){ return *begin();}
+        const_reference front() const { return *begin();}
         reference back(){ return *(--end());}
-        const_reference back(){ return *(--end());}
+        const_reference back() const { return *(--end());}
         bool empty() { return begin() == end();}
+        size_type size() const { return size_;}
 
         /*assign container*/
         void assign(size_type n,const T& value){ __fill_assign(n,value);}
         void assign(size_type n){ __fill_assign(n,T());}
-        template<class InputIterator>
+        template<class InputIterator,typename std::enable_if<
+            mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
         void assign(InputIterator first,InputIterator last);
         iterator insert(iterator position,const T& x);
         iterator insert(iterator position){ return insert(position,T());}
         void insert(iterator position,size_type n,const T& value);
-        template<class InputIterator>
+        template<class InputIterator,typename std::enable_if<
+            mjstl::is_input_iterator<InputIterator>::value,int>::type = 0>
         void insert(iterator position,InputIterator first,InputIterator last);
         iterator erase(iterator position);
         iterator erase(iterator first,iterator last);
@@ -148,7 +157,7 @@ namespace mjstl
         void pop_back(){ auto tmp = end(); erase(--tmp);}
         void resize(size_type new_size,const T& x);
         void resize(size_type new_size){ return resize(new_size,T());}
-        void swap(list& x){ mjstl::swap(node,x.node);}
+        void swap(list& x){ mjstl::swap(node,x.node); mjstl::swap(size_,x.size_); }
 
         /*container operation*/
         void splice(iterator position,list& x);
@@ -196,7 +205,14 @@ list<T,Alloc>::list(size_type n,const T& value){
 }
 
 template<class T,class Alloc>
-template<class InputIterator>
+list<T,Alloc>::list(std::initializer_list<value_type> ilist){
+    __initialize();
+    insert(begin(),ilist.begin(),ilist.end());
+}
+
+template<class T,class Alloc>
+template<class InputIterator,typename std::enable_if<
+  mjstl::is_input_iterator<InputIterator>::value,int>::type>
 list<T,Alloc>::list(InputIterator first,InputIterator last){
     __initialize();
     insert(begin(),first,last);
@@ -207,6 +223,15 @@ list<T,Alloc>::list(const list<T,Alloc>& x){
     __initialize();
     insert(begin(),x.begin(),x.end());
 }
+
+template<class T,class Alloc>
+list<T,Alloc>::list(list<T,Alloc>&& x)
+  :node(x.node),size_(x.size_)
+{
+    x.node = nullptr;
+    x.size_ = 0;
+}
+
 
 template<class T,class Alloc>
 list<T,Alloc>& list<T,Alloc>::operator=(const list<T,Alloc>& x){
@@ -221,26 +246,38 @@ list<T,Alloc>& list<T,Alloc>::operator=(const list<T,Alloc>& x){
             erase(first1,last1);
         else
             insert(first1,first2,last2);
-        }
+    }
+    return *this;
+}
+
+template<class T,class Alloc>
+list<T,Alloc>& list<T,Alloc>::operator=(list<T,Alloc>&& x){
+    if(this != &x){
+        list<T,Alloc> tmp(std::move(x));
+        swap(tmp);
+    }
     return *this;
 }
 
 template<class T,class Alloc>
 list<T,Alloc>::~list(){
-    link_type first = begin();
-    link_type last = end();
+    if(node == nullptr) return;
+    link_type first = node->next;
+    link_type last = node;
     while(first != last){
         link_type cur = first;
         first = first->next;
         __destory_node(cur);
     }
+    __destory_node(node);
+    node = nullptr;
 }
 
 template<class T,class Alloc>
-template<class InputIterator>
+template<class InputIterator,typename std::enable_if<
+  mjstl::is_input_iterator<InputIterator>::value,int>::type>
 void list<T,Alloc>::assign(InputIterator first,InputIterator last){
-    typedef typename __is_integer<InputIterator>::is_integer is_integer;
-    __assign_dispatch(first,last,is_integer());
+    __assign_dispatch(first,last,__false_type());
 }
 
 /* position位置插入一个元素x。*/
@@ -248,25 +285,27 @@ template<class T,class Alloc>
 typename list<T,Alloc>::iterator 
 list<T,Alloc>::insert(iterator position,const T& x){
     link_type tmp = __create_node(x);
-    tmp->next = (link_type)position.node;
-    tmp->prev = (link_type)position.node->prev;
-    position.node->prev = tmp;
+    tmp->next = (link_type)(position.node);
+    tmp->prev = (link_type)(position.node->prev);
+    //position.node->prev = tmp;
     position.node->prev->next = tmp;
+    position.node->prev = tmp;
+    ++size_;
     return tmp;
 }
 
 /*在position位置插入n个元素x。*/
 template<class T,class Alloc>
 void list<T,Alloc>::insert(iterator position,size_type n,const T& x){
-    __fill_insert(position,n,value);
+    __fill_insert(position,n,x);
 }
 
 /*在position位置插入[first,last)个元素。*/
 template<class T,class Alloc>
-template<class InputIterator>
+template<class InputIterator,typename std::enable_if<
+    mjstl::is_input_iterator<InputIterator>::value,int>::type>
 void list<T,Alloc>::insert(iterator position,InputIterator first,InputIterator last){
-    typedef typename __is_integer<InputIterator>::is_integer integer;
-    __insert_dispatch(position,first,last,integer());
+    __insert_dispatch(position,first,last,__false_type());
 }
 
 /* 删除position处的元素。*/
@@ -278,6 +317,7 @@ list<T,Alloc>::erase(iterator position){
     pprev->next = pnext;
     pnext->prev = pprev;
     __destory_node(position.node);
+    --size_;
     return (iterator)pnext;
 }
 
@@ -304,7 +344,7 @@ void list<T,Alloc>::resize(size_type new_size,const T& x){
     if(len == new_size)
         erase(it,end());
     else/*说明到尾了，大小仍然不够。*/
-        insert(it,new_size - len,x);
+        insert(end(),new_size - len,x);
 }
 
 /*清空*/
@@ -317,6 +357,7 @@ void list<T,Alloc>::clear(){
         first = first->next;
         __destory_node(cur);
     }
+    size_ = 0;
     node->prev = node->next = node;
 }
 
@@ -325,23 +366,30 @@ template<class T,class Alloc>
 void list<T,Alloc>::splice(iterator position,list& x){
     if(!x.empty())
         __transfer(position,x.begin(),x.end());
+    size_ += x.size_();
+    x.size_ = 0;
 }
 
 /* 将it所指元素接和于position之前。*/
 template<class T,class Alloc>
-void list<T,Alloc>::splice(iterator position,list&,iterator it){
+void list<T,Alloc>::splice(iterator position,list& x,iterator it){
     iterator jit = it;
     ++jit;
     if(position == it || position == jit) return;
     /* 其实就是[it,it+1)*/
     __transfer(position,it,jit);
+    --x.size_;
+    ++size_;
 }
 
 /* 将[first,last)元素接和于position之前。*/
 template<class T,class Alloc>
 void list<T,Alloc>::splice(iterator position,list& x,iterator first,iterator last){
-    if(first != last)
-        __transfer(position,first,last);
+    if(first == last) return;
+    size_type len = mjstl::distance(first,last);
+     __transfer(position,first,last);
+     x.size_ -= len;
+     size_  += len;
 }
 
 /*将数值所有为value的元素移除*/
@@ -404,7 +452,9 @@ void list<T,Alloc>::merge(list<T,Alloc>& x){
             ++first1;
     }
     if(first2 != last2)
-        __transfer(first1,first2,last2);
+        __transfer(last1,first2,last2);
+    size_ += x.size();
+    x.size_ = 0;
 }
 
 template<class T,class Alloc>
@@ -455,11 +505,11 @@ void list<T,Alloc>::reverse(){
 template<class T,class Alloc>
 typename list<T,Alloc>::link_type 
 list<T,Alloc>::__create_node(const T& x){
-    link_type p = data_allocate::allocate();
+    link_type p = data_allocator::allocate();
     try{
-        data_allocate::construct(p,__list_node<T>(x));
+        data_allocator::construct(p,__list_node<T>(x));
     }catch(...){
-        data_allocate::deallocate(p);
+        data_allocator::deallocate(p);
     }
     return p;
 }
@@ -467,13 +517,14 @@ list<T,Alloc>::__create_node(const T& x){
 template<class T,class Alloc>
 void list<T,Alloc>::__destory_node(link_type p){
     mjstl::destory(&p->data);
-    data_allocate::deallocate(p);
+    data_allocator::deallocate(p);
 }
 
 template<class T,class Alloc>
 void list<T,Alloc>::__initialize(){
     node = __create_node();
     node->prev = node->next = node;
+    size_ = 0;
 }
 
 template<class T,class Alloc>
@@ -499,7 +550,7 @@ template<class InputIterator>
 void list<T,Alloc>::__assign_dispatch(InputIterator first2,InputIterator last2,__false_type){
     iterator first1 = begin();
     iterator last1 = end();
-    for(; first1 != last1 && first2 != last2; ++first,++first1)
+    for(; first1 != last1 && first2 != last2; ++first1,++first2)
         *first1 = *first2;
     if(first2 != last2)
         insert(first1,first2,last2);
@@ -530,15 +581,21 @@ void list<T,Alloc>::__insert_dispatch(iterator position,InputIterator first,
 template<class T,class Alloc>
 void list<T,Alloc>::__transfer(iterator position,iterator first,iterator last){
     if(position == last) return;
-    iterator endit = --last;
+    /*
+    *   草率用 endit = --last; 后面还需要last不妥。
+    * 然后想到last不能变用后缀--，endit = last--，这样
+    * endit就不是last的前一个结点了，没作用。写糊涂了。
+    * 只能用 endit = last.node->prev;
+    */
+    iterator endit = last.node->prev;
     /*先把[first,last)取下来，再缝合first前面后last元素。*/
-    (link_type)first.node->prev = (link_type)last.node;
-    (link_type)last.node->prev = (link_type)first.node->prev;
+    first.node->prev->next = (link_type)last.node;
+    last.node->prev = (link_type)first.node->prev;
     /*将[first,last)插入position前面*/
-    (link_type)endit.node->next = (link_type)position.node;
-    (link_type)first.node->prev = (link_type)position.node->prev;
-    (link_type)first.node->prev->next = (link_type)first.node;
-    (link_type)position.node->prev = (link_type)last.node->prev
+    endit.node->next = (link_type)position.node;
+    first.node->prev = (link_type)position.node->prev;
+    first.node->prev->next = (link_type)first.node;
+    position.node->prev = (link_type)endit.node;
 }
 
 template<class T,class Alloc>
